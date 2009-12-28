@@ -1,0 +1,708 @@
+New for 1.65.0
+------------------------------------
+* Fix discontinuities in ogg page numbers (#1392868)
+* Many bug fixes
+* Many new bugs
+
+New for 1.64.6
+------------------------------------
+Mon Mar 30 21:10:13 EDT 2009
+* Fix bug which creates corrupted id3v2 tags
+* Remove trailing periods for stream name
+
+New for 1.64.5
+------------------------------------
+Sun Mar  8 12:08:15 EDT 2009
+* Change default values for
+  - localhost from "localhost" to "127.0.0.1"
+  - splitpoint padding from 300 ms to 0 ms
+  - metadata and relay codeset (if UTF-8) to ISO-8859-1
+  - id3 codeset to UTF-16
+  - "keep files in incomplete" from false to true
+* Fix parse rules to properly tag artists with "-" in their name (#540543)
+* Fix bitrate & metadata reporting in console (#1957248)
+* Fix integer overflow on bytes read (#1261305)
+* Option for stopping based on megabytes ripped now uses MiB instead of MB
+* Support splitting based on empty StreamTitle= strings 2648664
+
+New for 1.64.4
+------------------------------------
+Mon Feb 16 21:27:29 EST 2009
+* Fix problem where corrupt ogg files are being created
+* Robustify metadata parsing for Limecast servers
+* Fix buffer overflow bug with substitution rules (#2492422)
+* Fix file creation bug when "/" is in stream name (#2533980)
+* Disable creating cue file for ogg streams
+* Fix problem skipping extra track on ogg streams
+
+New for 1.64.3
+------------------------------------
+Sun Dec 28 20:14:14 EST 2008
+* Windows: Fix socket timeout problem
+* Fix bug where ogg streams with repeated metadata were being split 
+  (#1804582,1953084)
+
+New for 1.64.2
+------------------------------------
+Mon, Dec 22, 2008
+* Windows: Fix packaging error (missing dll)
+
+New for 1.64.1
+------------------------------------
+Sat, Dec 13, 2008
+* Plugin: Streamripper can now load zipped skins
+* Plugin: Streamripper skins can be (slightly) configured to use different
+  image regions.  This fixes the "extra pixel" bug.
+* Streamripper again skips leading dots "." when making files & directories
+* Fix problem with control characters in metadata
+* Fix crash when splitting without padding and without search window
+* Workaround problem with ogg streams which don't send any metadata
+* Streamripper now respects user timeout in more situations
+* Add --xs-none option
+
+New for 1.64.0
+------------------------------------
+Wed Nov 19 09:00:06 EST 2008
+* Security patch for CVE-2008-4829, multiple buffer overflows in http.c
+  that could result in remote exploit
+* Fix winamp plugin failure when requested skin (from prefs file) 
+  does not exist
+
+New for 1.64.0-beta-2 (windows only)
+------------------------------------
+Sat 10-25-2008
+* Patch glib 2.16 to support win9x
+* Fix a memory leak in PCRE parsing
+
+New for 1.64.0-beta-1 (unix only)
+---------------------------------
+Sun Oct 12 23:03:39 EDT 2008
+* Transition from TRE (or native regex) to glib PCRE
+* Update windows glib version to custom build of 2.16.5
+* Add Florian Stoehr's patch for better http header compatibility
+* Fix erroneous display of -68 error on unix
+* Better character substitution for invalid charset conversions
+
+New for 1.63.5
+--------------
+Sun Jun 15 17:11:42 EDT 2008
+* Add "-o version" option to keep multiple versions of completed files
+  (#1795423 and #1294878)
+* The new default overwriting behavior is "-o version"
+* Showfiles are now versioned rather than being silently overwritten
+* Plugin: fix crash clicking on RLY button before stream is loaded
+* Fix problem ripping mp3 streams which have a URL that ends in ".ogg"
+* Fix build problem for libmad-0.15.1b on gcc 4.3
+
+New for 1.63.4
+--------------
+Sunday, June 1, 2008
+* Fix problem where invalid metadata characters caused metadata to be lost
+* Windows: fix problem saving prefs file in paths with non-ascii characters
+* Usage information is now sent to stdout instead of stderr
+* Probable fix for bug where http_proxy is not respected
+
+New for 1.63.3
+--------------
+Saturday, May 24, 2008
+* Fix bug where a single byte was written to both files when splitting 
+  aac or nsv streams
+* Plugin: add dialog box for manually loading the URL
+
+New for 1.63.2
+--------------
+Sunday, May 18, 2008
+* Plugin: send icyx:// URLs from winamp to wstreamripper
+
+New for 1.63.1
+--------------
+Sun May  4 13:42:27 EDT 2008
+* Fix bug where redirected URLs with text/html were not being redirected
+* Fix bug with command line parsing (-A, -c, -s, -z)
+
+New for 1.63.0
+--------------
+Sat May  3 14:31:11 EDT 2008
+* Add --stderr option for frontends which expect output on stderr
+
+New for 1.63-beta-8
+--------------
+Sun Apr 27 14:57:21 EDT 2008
+* Add Yoav's patch for parsing bitrates from streaming Apache headers
+* Activate capisce's patch for improved silence detection (use --xs2)
+* Add missing options, versioning to preferences file
+* Console versions (win & unix) send output to stdout instead of stderr
+* Console versions (win & unix) now fflush their output
+* Fix a bug in beta-5 where multiple tracks with identical cooked metadata 
+  were not coalesced into a single track
+* Change meaning of -k <num> option.  Now <num> is the number of files 
+  to leave in incomplete.  This makes it easier to rip streams where 
+  the first file is known to be complete (#1821814)
+* Fix bug which disables options when specified in preference file
+  and in command line
+
+New for 1.63-beta-7
+--------------
+Sunday, April 6, 2008
+* Remove wstreamripper from taskbar & alt-tab when used as plugin
+* Move wstreamripper to top when winamp is activated
+* Activate winamp when user clicks on wstreamripper
+* Updates to windows uninstaller
+
+New for 1.63-beta-6
+--------------
+Thursday, April 3, 2008
+* Fix crashes in winamp plugin
+* Fix problem where plugin didn't remember if it was enabled
+
+New for 1.63-beta-5
+--------------
+Sunday, March 30, 2008
+* Remove global variables for stream data to allow multi-rip applications
+* Internal string processing now uses UTF-8 instead of wide characters
+* Create a shared library, streamripper.dll, on windows which is shared 
+  by streamripper.exe and wstreamripper.exe
+* Fix problem reported in forum to allow pct-escaping of username, password
+* Fix delay in sending meta-data to relay stream
+* Add Andrew Neitsch's patch for parsing year & track from metadata
+
+New for 1.63-beta-4
+--------------
+Monday, Feb 11, 2008
+* Fix crash on CTRL-C when reconnecting (#764599)
+* Improve responsivity of CTRL-C on unix
+* Remove dead code
+
+New for 1.63-beta-3
+--------------
+Sun 01-27-2008
+* Fix problem when not ripping individual tracks
+* Plugin: no longer saves unused sripper.ini to Winamp folder
+* Plugin: once again default output directory is the desktop
+
+New for 1.63-beta-2
+--------------
+Sunday, January 13, 2008
+* New installer for windows
+* Plugin: streamripper now runs as a separate process from winamp
+* Plugin: a few things probably don't work yet
+* Cue file now uses relative path for filename
+* Add patch from nn to detect full disk condition
+* Add patch from nn for improved parsing of parse rules file (#1825475)
+* Add patch from Max Mutrux fixing two problems with the relay lib
+  and a fix for id3 on 64-bit systems
+
+New for 1.63-beta-1
+--------------
+Sat 10-20-2007
+* Use glib library
+* Add preference file processing
+* Reject connections to content-type text/html
+* Plugin: fix problem where geometry sometimes gets located outside screen
+
+New for 1.62.2
+--------------
+Sun Aug 12 17:02:22 EDT 2007
+* Fix buffer overflow in http header parsing
+
+New for 1.62.1
+--------------
+Sat May 26 15:33:12 EDT 2007
+* Fix problem with -E flag
+
+New for 1.62.0
+--------------
+Sat May 19 11:12:27 EDT 2007
+* Cue file was writing garbage for title and artist
+
+New for 1.62-beta-7
+-------------------
+Sun May 13 15:48:13 EDT 2007
+* Zero out id3v2 padding
+
+New for 1.62-beta-6
+-------------------
+Sun Apr 29 11:54:36 EDT 2007
+* Really fix problem with -q flag
+
+New for 1.62-beta-5
+-------------------
+Sat Apr 28 14:34:54 EDT 2007
+* Fix problem with -q flag
+* Fix problem where pre-padding could be truncated
+
+New for 1.62-beta-4
+-------------------
+Sun 04-15-2007
+* Remove shadowed RIP_MANAGER_OPTIONS structure
+* Fix error in thread exit of relay stream
+* Fix memory bug in parse rules initialization
+* Fix problem executing substitution rule
+* Plugin: fix adding tracks to winamp
+
+New for 1.62-beta-3
+-------------------
+Sun 03-25-2007
+* Plugin: Various GUI fixes
+* Plugin: Fix memory error during registry parsing
+* Plugin: Eliminate repeated loading of sripper.ini each time 
+  options dialogs created
+* Plugin: Fix problem with id3 checkboxes always being set
+
+New for 1.62-beta-2
+-------------------
+Sat Mar 10 21:14:13 EST 2007
+* Make not adding id3v1 the default
+* Add id3v1/id3v2 GUI to winamp plugin
+* Add codeset options to windows
+* Add codeset GUI to winamp plugin
+* Upgrade windows iconv to 1.11
+* Force UTF-16 for id3 when any flavor of UCS-2 or UTF-16 spec'd
+* Remove warning for E2BIG iconv conversion
+
+New for 1.62-beta-1
+-------------------
+Sun Feb 11 17:07:31 EST 2007
+* New codeset options - codesets for metadata, id3, filesystem and 
+  relay are independently selectable
+* Id3v1 and id3v2 are now independently selectable
+
+New for 1.61.27
+---------------
+Saturday, September 09, 2006
+* Fix bug that caused extra garbage between id3v2 and first frame.
+* Fix bug that truncated last byte of last frame in mp3 files.
+
+New for 1.61.26
+---------------
+Thu Aug 24 21:50:47 EDT 2006
+* Fix for security problem CVE-2006-3124, buffer overflow in http 
+  header parsing that could result in remote exploit
+
+New for 1.61.25
+---------------
+Sunday, August 13, 2006
+* Fix bug where -s flag was ignored when used with -a flag
+* Plugin: Add popup menu with history of recent URL's
+* Plugin: Fix problem with "old way of retrieving track"
+* Plugin: Fix problem not finding desktop folder on Windows 98
+
+New for 1.61.24
+---------------
+Sun Jul  2 14:14:38 EDT 2006
+* Fix bug where external program wasn't being killed when reconnecting
+
+New for 1.61.23
+---------------
+June 18, 2006
+* Plugin: Fix problem where streamripper can't find winamp directory
+* Plugin: Add STREAMRIPPER_WINAMP_HOME environment variable
+* Plugin: Fix sorting problem with skin list
+* Plugin: Add uninstaller
+* Plugin: Installer no longer overwrites parse_rules.txt
+
+New for 1.61.22
+---------------
+Fri Jun  2 10:17:53 EDT 2006
+* Docking now works in modern skins
+* Docking now works when windowshading winamp
+* Debugging winamp plugin through STREAMRIPPER_DEBUG environment variable
+
+New for 1.61.21
+---------------
+Sun 05-28-2006
+* Fix winamp crash caused by reference to debug file
+
+New for 1.61.20
+---------------
+Sat 05-27-2006
+* Fix problem writing to \\net\paths on windows
+* Fix problem with options getting reset in winamp plugin
+* Fix rendering problem with skin preview in winamp plugin
+* Fix docking problem in winamp plugin
+
+New for 1.61.19
+---------------
+Sat 03-25-2006
+* Add support for pls and m3u parsing
+* Upgrade to TRE version 0.7.2
+* Add configuration switch: --without-ogg, for compiling 
+  streamripper on systems that don't have ogg/vorbis libraries.
+
+New for 1.61.18
+---------------
+Sun Mar  5 19:39:24 EST 2006
+* Add support for ogg file splitting
+* Add support for ogg relay
+* Return an ICY response header instead of HTTP response header.
+  This fixes problems with Windows media player classic (#1189504).
+* Winamp relay now adds /;stream.nsv or /.ogg for NSV and OGG streams.
+* Add izverg's patch for when default skin is blank in sripper.ini.
+
+New for 1.61.17
+---------------
+Tue 11-22-2005
+* Fix memory leak
+* Fix for proxy authentication without password (#1338203)
+* Check http_proxy environment variable for proxy url
+
+New for 1.61.16
+---------------
+Sat Nov 12 01:18:06 EST 2005
+* Use external program for reading metadata
+* Possible fix for proxy authentication without password (#1338203)
+* Change splitting behavior when song is too short to do silence detection
+* Resize winamp plugin gui to make it more visible
+
+New for 1.61.15
+---------------
+Fri 10-21-2005
+* Fix a problem where streamripper aborts with SR_ERROR_BUFFER_EMPTY
+* Improve splitting code to add correct amount of padding
+* Add winamp plugin GUI for -k flag
+
+New for 1.61.14
+---------------
+Thu Sep 22 23:06:55 EDT 2005
+* Fix deadlock when not using relay server
+
+New for 1.61.13
+---------------
+Sun Sep 18 18:50:51 EDT 2005
+* Fix new relay stream problem with streams that don't have metadata.
+
+New for 1.61.12
+---------------
+Sun Sep 18 17:32:45 EDT 2005
+* Major rewrite internal buffering code
+* Burst on connect for relay streams (128k burst)
+* Now can use patterns with -a flag
+* Fix problem using absolute paths with -a flag (#1254632)
+* Fix broken mp3 frames in split files (#525936)
+  Note, however, we still have broken initial frame with -a flag
+* Partial fix for overflow using -M flag (see bug #1261305)
+* Fix wrong default overwriting behavior (#1269511)
+* Fix a couple of memory errors
+
+New for 1.61.11
+---------------
+Sun 08-07-2005
+* Implement new output file naming code for windows
+* Perform stripping separately on stream, artist, title, album
+* Always strip trailing period (see bug #1202516), note that this 
+  is not a complete fix because directories could be created by %A 
+  for example
+* Add Daniel Lord's patch for overwrite-when-larger
+* Modify DL's patch to support three states: always-overwrite, 
+  never-overwrite, and overwrite-when-larger
+* Fix bug reported in forum about malformed regular expressions
+* Update winamp plugin gui for output file naming
+* Update winamp plugin to install and use parse_rules.txt
+
+New for 1.61.10
+---------------
+Fri Jul  8 02:05:22 EDT 2005
+* Fix problem with -q flag always using 0000
+
+New for 1.61.9
+--------------
+Mon Jun 27 08:16:04 EDT 2005
+* Add patch from Albert for metadata restriction rules
+* New -D flag for output file patterns
+* The -q flag now autodetects the correct number to start with
+* The -q flag now takes an optional starting number
+* Remove support for -P prefix, it is now a fatal error
+* Using -f dropstring option is now a fatal error
+* Under development, new buffering code
+
+New for 1.61.8
+--------------
+Sat Apr 23 22:20:02 EDT 2005
+* Add bd's patch for creating a relay server pls file
+* Fix FreeBSD 4.10 configuration problem because of broken wchar support.
+  (half of #1024627)
+* Fix problem on FreeBSD & MacOSX caused by non-POSIX compliant 
+  default parsing rules (#1096005)
+* Fix compile problems on Solaris 9 (#1116304)
+
+New for 1.61.7
+--------------
+Sun Apr 10 15:58:07 EDT 2005
+* Fix memory bug in relay lib
+
+New for 1.61.6
+--------------
+Sun Apr 10 10:41:51 EDT 2005
+* Add Daniel Potts' fix that cures relay artifacts for clients who 
+  don't request meta-data
+* Fix relay artifacts on streams that don't have meta-data at all
+* Fix two memory bugs that caused crashes on debian
+* Change id3 genre from 0x00 (blues) to 0xff (unknown)
+
+New for 1.61.5
+--------------
+Sat 03-26-2005
+* Add -A flag: suppress individual files
+* Add --quiet flag: no ripping status sent to console
+* Fix bug #1108854, windows directory ending in periods
+* Change unix directory name rectification to replace only leading 
+  periods instead of all periods
+
+New for 1.61.4
+--------------
+Wed Feb 23 00:51:11 EST 2005
+* Fix for relay stream popping on xmms
+* Add Les's patch for the -M flag.
+* Add Obiguan's patch for the -T flag.
+* Add Aussie's patch for the -P flag.
+* Upgrades for new version of autoconf
+* Fix incorrect size field in id3v2 tag
+
+New for 1.61.3
+--------------
+Sat 12-11-2004
+* Fix bug introduced in 1.61.2, whereby url referral (Location: header) 
+  stopped working
+* Fix problem with using regular expressions to drop metadata
+* Some code realignment in main ripping loop
+
+New for 1.61.2
+--------------
+Sat 12-04-2004
+* Identify different stream types: mp3, ogg, aac, & nsv
+* Save stream types with correct file extensions
+* Don't do silence splitting on ogg, aac & nsv
+* Support "ice-" style http headers used by some icecast2 servers
+
+New for 1.61.1
+--------------
+* Use regular expression matching for metadata parsing
+* New option -w parse-rules-file
+* Remove -f dropstring option (use -w instead)
+* Improvements to unicode support
+* Improved support for icecast2 servers
+* Fix incorrect song title on first track
+* Very preliminary support for ogg streams
+* Remove vestigial DEBUG functions
+
+New for 1.61.0
+--------------
+* Add signal handler to SIGTERM.
+* Fix for SR_ERROR_NOT_SHOUTCAST_STREAM when \r\n\r\n exists before
+  icy portion of header.
+* Add check for -lsem to configure script
+* Increase streamripper relay buffer size to fix streamripper 
+  relay noises when relay client connects early.
+
+New for 1.60.13
+---------------
+Aug 21, 2004 (GCS)
+* Fix skips in relay stream
+* Add frame numbers & FILE attribute to cue files
+* Fix file permissions on UNIX
+
+New for 1.60.12
+---------------
+* Add -R option to limit number of clients connected to relay
+* Autodetect streamripper as server
+* Fix bug in command line parsing with -I flag
+
+New for 1.60.11
+---------------
+Thu Jul  8 23:55:38 EDT 2004 (GCS)
+* Possible fix for frameoffset != READSIZE problem 
+
+New for 1.60.10
+---------------
+Sat Jun  5 12:53:36 EDT 2004 (GCS)
+* Fix streamripper hang when not using -r flag
+* Fix error codes not being propagated from socklib
+* Add error check in rip_manager::myrecv for incompletely received
+  buffers (to fix SR_ERROR_INVALID_METADATA messages)
+
+New for 1.60.9
+--------------
+* Apply Josh Lehan's patch:
+-  Multiple relay streams
+-  Fix wandering port problem
+-  New flag "-m" for auto-closing connection
+-  New flag "-k" to avoid saving broken songs after connect
+* Add debug information for frameoffset == READSIZE problem
+
+New for 1.60.8
+--------------
+* Fix a bug which caused the -d flag to fail on unix.
+* New flag "--debug" to turn on debugging
+
+New for 1.60.7
+--------------
+Mon May 17 00:09:40 EDT 2004 (GCS)
+* Send metadata to relay stream
+* Add plugin gui prop page for splitpoints options
+* Fix crash when bitrate==0
+* Fix crash when no metadata
+* Mike Frysinger's patch to rip from specified interface
+
+New for 1.60.6
+--------------
+2004/05/09 (GCS)
+* Re-fix crashes on very long file names, because the previous fix
+  didn't work in some cases
+* Add plugin gui options: rip to single file, specify relay port
+* Fix plugin gui bug with skin preview
+* Add -h option (display help)
+
+New for 1.60.5
+--------------
+2004/04/26 (GCS)
+* Upgrade to libmad version 0.15.1b (windows)
+* Improvements to -a flag
+
+New for 1.60.4
+--------------
+2004/04/22 (GCS)
+* Fix program termination condition to exit properly on certain errors.
+
+New for 1.60.3
+--------------
+* Upgrade to libmad version 0.15.1b (unix)
+* Upgrade autoconf & automake 
+
+New for 1.60.2
+--------------
+* Fix bug with -t flag
+* Initial implementation -a flag (rip to single file)
+
+New for 1.60.1
+--------------
+* Rip streams even if they don't have an icy-name
+
+New for 1.60
+------------
+2004/04/04 (GCS - gregsharp@users.sourceforge.net)
+* No changes.
+
+New for 1.60-pre3
+-----------------
+2004/03/27 (GCS - gregsharp@users.sourceforge.net)
+* Fix the bug: error -22 [SR_ERROR_BUFFER_EMPTY]
+
+New for 1.60-pre2
+-----------------
+2004/03/24 (GCS - gregsharp@users.sourceforge.net)
+* Add Johannes Buettner's drop patch
+* Fixes for compiling winamp 2 plugin
+
+New for 1.60-pre1
+-----------------
+2004/03/10 (GCS - gregsharp@users.sourceforge.net)
+* Track splitting enhancements - see readme_xfade.txt
+* Partial multibyte character support
+* Fix crashes on very long file names
+* Fix crashes on control characters in meta data
+* New flag "-t" to prevent overwriting files in the incomplete directory
+
+new in cvs
+----------
+2003/09/25:
+* Added support for HTTP "Basic" authorization. Works with
+  DigitallyImported.com.
+  (lib/types.h, lib/http.c) -Colin D. Bennett <cbennett@radsoft.com>
+* Fixed a couple of tiny memory leaks in the usage of b64enc(), the
+  returned buffer allocated as 'string' in b64enc wasn't being freed,
+  and the 'authbuf' malloc'd in httplib_construct_sc_request for the 
+  proxy authorization wasn't freed.
+  (lib/http.c) -Colin D. Bennett <cbennett@radsoft.com>
+
+new in 1.30b (win32 & nix)
+--------------
+* Added option to never overwrite files in the incomplete directory
+* UserAgent fix for picky streams (fakes winamp)
+* Fix for "INVALID_TRACK_SEPARATION" message.
+* Options dialog now has tabs w/ WinXP look and feel (if you have XP)
+* Proxy field now understands auth (user:pass@server:port) format.
+* pretty massive changes to handling of threads, might use slightly 
+less CPU usage under windows, should use MUCH less under *nix (once 
+the *nix backport is done)
+* Fixed moves files from incomplete to main directory
+
+Changes in 1.0.4
+----------------
+* Fixed mpglib stuff.
+
+Changes in 1.0.3
+----------------
+* Removed live365 ripping (legal reasons)
+
+Changes in 1.0.2
+----------------
+* Merged back in with Win32 build, fixed live365.com ripping
+* fixed thread creation timing bug, would happen on some linux 
+machines, sometimes.
+* fixed bug that would cause divide by zero when mpglib failed 
+very (very) badly
+* Trims track names, for some reason some track names contained \r's
+
+Changes in 1.0.1
+----------------
+* ported to win32 and made a winamp plug-in
+* made all socket I/O non blocking
+* should quite faster now
+
+Changes in 1.0b
+----------------
+* Finds silence between tracks by decoding the MP3 with mpglib
+* Rips live365 streams
+* Creates shoutcast relay server for listening for listening to streams
+* Separates incomplete tracks
+* Uses cvs @ sourceforge.net
+* supports icecast mount points
+* proxy support
+* More.. much much more..
+
+Changes in 0.7.0
+----------------
+* Started playing around with cvs at sourceforge.net
+
+Changes in 0.7.0b
+----------------
+* Split up streamripper_lib into ripper.c and sockets.c
+* Made start_ripping asynchronous via threads. This is mainly due 
+to problems with people implementing the library under a windowed 
+environment. it should be quite easy to make a GUI frontend now
+* Added a -o option via request. this creates a directory after the 
+the stream name and puts the tracks in there, pretty nifty
+* MPEG 2.5 frames are now handles correctly, this caused 
+"too many errors in mp3 data"  errors before
+* Errors in the mp3 data do not stop the ripping anymore.
+* added -n option via request. this waits until the next track 
+before ripping to  avoid getting a half done tracks
+* Uses automake now, doh
+
+Changes in 0.6.4
+----------------
+* new code to process options due to win32 not supported getopt
+* compiles under win32 :)
+
+Changes in 0.6.3
+----------------
+* outputs stream data to stdout for use with mpg123
+* rips shoutcast streams without meta data
+
+Changes in 0.6.0
+----------------
+* added pretty counting byte status
+* checks mp3 header, starts and ends file at valid positions
+* traps signals and exists gracefully
+* takes host names, not just ip's.
+* merged in changes from Mike Baker <mbm@linux.com>
+* works with meta intervals other then 8192
+* quite mode, don't actually record anything.
+
+Changes in 0.5.0b
+----------------
+* Fixed RedHat 6.1 compile bug 
+
+Changes in 0.5.0a
+----------------
+* Initial release.

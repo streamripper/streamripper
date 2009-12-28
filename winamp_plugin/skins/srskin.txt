@@ -1,0 +1,11 @@
+[Background]
+## This is the region within the image bitmap: left top right bottom
+img_loc = 0 0 275 150
+
+## region_poly is how the shape rendered on the screen
+
+## If you want square corners, you could use this
+##region_poly = 0,0; 275,0; 275,150; 0,150
+
+## If you want rounded corners, you could use this
+region_poly = 2,0; 273,0; 273,1; 274,1; 274,2; 275,2; 275,148; 274,148; 274,149; 273,149; 273,150; 2,150; 2,149; 1,149; 1,148; 0,148; 0,2; 1,2; 1,1; 2,1

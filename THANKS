@@ -1,0 +1,68 @@
+Thanks to all the people who have contributed to streamripper!
+
+THANKS (1.64)
+---------------------
+"Stefan Cornelius" <vuln a@t secunia.com> at Secunia Research for 
+finding buffer overflows.
+"bl4" <bl4 a@t users.sourceforge.net> multiple patches: metadata parsing, 
+parse rules, integer overflow of bytes ripped, bitrate display.
+
+THANKS (1.62 & 1.63)
+---------------------
+"Chris Rohlf" <chris.rohlf@gmail.com> for finding buffer overflow.
+"nn" for adding checks on disk full, improved parsing of parse rules file.
+"Max Mutrix" <rmaxm a@t yahoo.com> for fixing two problems with the relay lib
+and a fix for id3 on 64-bit systems.
+"Andrew Neitsch" <neitsch a@t blindrut.ca> for a patch that parses year and 
+track information from metadata.
+"Yoav" for a patch to parse streaming Apache headers
+"capisce" for the improved silence detection algorithm (--xs2 option)
+
+THANKS (1.61)
+---------------------
+"ASk" fix id3v2 parsing problem
+"Ulf Harnhammer" from the Debian Security Audit Project
+for finding buffer overflows.
+"John Spray" <jcs116@york.ac.uk> for $http_proxy patch.
+"Les Smithson" <lsmithso a@t hare.demon.co.uk> for -M flag.
+"Obiguan" <obiguan a@t gmail.com> for -T flag.
+"Martin Bockwinkel" <Bockwinkel a@t Softwarebrigade.com> for -P flag.
+"Michael Ablassmeier" <abi a@t grinser.de> help with identifying 
+memory crashes.
+"Daniel Potts" <danielp a@t cse.unsw.edu.au> a nice patch to support relay 
+connections from clients that don't want metadata.
+"9EUvY5gQPB4=" patch for id3 genre.
+"bd" <bd a@t bc-bd.org> for -L flag that creates a relay server pls file.
+"Albert Bachmann" <lbert.bachmann a@t gmx.de> For new metadata rules 
+which let you choose which files to save or delete.
+"Daniel Lord" patch for overwriting complete files when bigger.
+"Chris Pearson" partial fix for overflows using the -M flag.
+"isverg" a patch for when the default skin is blank in sripper.ini.
+
+THANKS (1.60)
+---------------------
+"Mauricio" <batsman.geo a@t yahoo.com> for fix of http header parsing bug.
+"Laetitia" <Laetitia a@t cox.net> for fix of relay skipping bug.
+"Marcin Garski" <mgarski a@t post.pl> for file permissions patch.
+"Josh Lehan" <krellan a@t krellan.com> for multi-client relay patch, 
+fix for port wandering, -m flag for auto-closing connection, 
+and -k flag to avoid saving broken songs after connect.
+"Mike Frysinger" <vapier a@t gentoo.org> for a patch to control streaming 
+for multiple ethernet interfaces.
+"Michael Ablassmeier" <abi a@t grinser.de> for the man page, debian 
+maintenance and other stuff.
+"darrick" <darrick a@t dcn.org> for fixing the CTRL-C bug.
+
+THANKS (up to v.1.54)
+---------------------
+Oddsock <oddsock a@t oddsock.org> for his Streamripper32 Win32 version and 
+ID3 addition.
+Felix <felix a@t blasphemo.net> for the file counting and date/time 
+directory addition.
+Mark Lacas <mark a@t lacas.com> for OSX porting.
+Robin P. Blanchard <Robin_Blanchard a@t gactr.uga.edu> - FreeBSD compatability
+Jeff Lexington <aremont6639vze a@t excite.com> for the spanish translation.
+
+--------------------
+If we have forgotten to list you here, or if you don't want to be listed 
+here, contact Greg Sharp <gregsharp a@t geocities.com>.

@@ -1,0 +1,28 @@
+##-----------------------------------------------------------------------------
+## Copied from FindX11.cmake
+##-----------------------------------------------------------------------------
+
+SET (SR_EXTRA_LIBS)
+
+# Find library needed for gethostbyname.
+CHECK_FUNCTION_EXISTS("gethostbyname" CMAKE_HAVE_GETHOSTBYNAME)
+IF(NOT CMAKE_HAVE_GETHOSTBYNAME)
+  CHECK_LIBRARY_EXISTS("nsl" "gethostbyname" "" CMAKE_LIB_NSL_HAS_GETHOSTBYNAME) 
+  IF (CMAKE_LIB_NSL_HAS_GETHOSTBYNAME)
+    SET (SR_EXTRA_LIBS ${SR_EXTRA_LIBS} nsl)
+  ELSE (CMAKE_LIB_NSL_HAS_GETHOSTBYNAME)
+    CHECK_LIBRARY_EXISTS("bsd" "gethostbyname" "" CMAKE_LIB_BSD_HAS_GETHOSTBYNAME) 
+    IF (CMAKE_LIB_BSD_HAS_GETHOSTBYNAME)
+      SET (SR_EXTRA_LIBS ${SR_EXTRA_LIBS} bsd)
+    ENDIF (CMAKE_LIB_BSD_HAS_GETHOSTBYNAME)
+  ENDIF (CMAKE_LIB_NSL_HAS_GETHOSTBYNAME)
+ENDIF(NOT CMAKE_HAVE_GETHOSTBYNAME)
+
+# Find library needed for connect.
+CHECK_FUNCTION_EXISTS("connect" CMAKE_HAVE_CONNECT)
+IF(NOT CMAKE_HAVE_CONNECT)
+  CHECK_LIBRARY_EXISTS("socket" "connect" "" CMAKE_LIB_SOCKET_HAS_CONNECT) 
+  IF (CMAKE_LIB_SOCKET_HAS_CONNECT)
+    SET (SR_EXTRA_LIBS socket ${SR_EXTRA_LIBS})
+  ENDIF (CMAKE_LIB_SOCKET_HAS_CONNECT)
+ENDIF(NOT CMAKE_HAVE_CONNECT)
