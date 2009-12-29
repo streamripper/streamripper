@@ -329,13 +329,15 @@ http_construct_page_request (const char *url, BOOL proxyformat, char *buffer)
 int
 extract_header_value (char *header, char *dest, char *match, int maxlen)
 {
-    char* start = (char *)strstr(header, match);
-    if (start) {
-	subnstr_until(start+strlen(match), "\n", dest, maxlen);
-	return 1;
-    } else {
-	return 0;
+    char *start = header;
+    while (*start) {
+	if (!g_ascii_strcasecmp (start, match)) {
+	    subnstr_until (start + strlen(match), "\n", dest, maxlen);
+	    return 1;
+	}
+	start ++;
     }
+    return 0;
 }
 
 error_code
@@ -362,19 +364,18 @@ http_parse_sc_header (const char *url, char *header, SR_HTTP_HEADER *info)
     debug_printf("http header:\n%s\n", header);
 
     // Get the ICY code.
-    start = (char *)strstr(header, "ICY ");
+    start = (char*) strstr (header, "ICY ");
     if (!start) {
-	start = (char *)strstr(header, "HTTP/1.");
+	start = (char*) strstr (header, "HTTP/1.");
 	if (!start) {
 	    debug_printf ("Failed to find ICY or HTTP\n");
 	    return SR_ERROR_NO_RESPONSE_HEADER;
 	}
     }
-    start = strstr(start, " ") + 1;
-    sscanf(start, "%i", &info->icy_code);
+    start = strstr (start, " ") + 1;
+    sscanf (start, "%i", &info->icy_code);
     if (info->icy_code >= 400) {
-	switch (info->icy_code)
-	{
+	switch (info->icy_code) {
 	case 400:
 	    return SR_ERROR_HTTP_400_ERROR;
 	case 404:
@@ -394,32 +395,28 @@ http_parse_sc_header (const char *url, char *header, SR_HTTP_HEADER *info)
 
     // read generic headers
     extract_header_value(header, info->http_location, "Location:", 
-			 sizeof(info->http_location));
+	sizeof(info->http_location));
     extract_header_value(header, info->server, "Server:", 
-			 sizeof(info->server));
+	sizeof(info->server));
     rc = extract_header_value(header, info->icy_name, "icy-name:", 
-			      sizeof(info->icy_name));
+	sizeof(info->icy_name));
     if (rc == 0) {
 	/* Icecast 2.0.1 */
 	rc = extract_header_value(header, info->icy_name, "ice-name:", 
-				  sizeof(info->icy_name));
+	    sizeof(info->icy_name));
     }
     info->have_icy_name = rc;
     extract_header_value(header, info->icy_url, "icy-url:", 
-			 sizeof(info->icy_url));
+	sizeof(info->icy_url));
     rc = extract_header_value(header, stempbr, 
-			      "icy-br:", sizeof(stempbr));
+	"icy-br:", sizeof(stempbr));
     if (rc) {
 	info->icy_bitrate = atoi(stempbr);
     }
 
     /* interpret the content type from http header */
     rc = extract_header_value(header, stempbr, 
-			      "Content-Type:", sizeof(stempbr));
-    if (rc == 0) {
-        rc = extract_header_value(header, stempbr, 
-				  "content-type:", sizeof(stempbr));
-    }
+	"Content-Type:", sizeof(stempbr));
     if (rc == 0) {
 	info->content_type = CONTENT_TYPE_UNKNOWN;
     }
@@ -508,14 +505,14 @@ http_parse_sc_header (const char *url, char *header, SR_HTTP_HEADER *info)
 
 	// icecast 1.x headers.
 	extract_header_value(header, info->icy_url, "x-audiocast-server-url:",
-			     sizeof(info->icy_url));
+	    sizeof(info->icy_url));
 	rc = extract_header_value(header, info->icy_name, "x-audiocast-name:",
-				  sizeof(info->icy_name));
+	    sizeof(info->icy_name));
 	info->have_icy_name |= rc;
 	extract_header_value(header, info->icy_genre, "x-audiocast-genre:",
-			     sizeof(info->icy_genre));
+	    sizeof(info->icy_genre));
 	rc = extract_header_value(header, stempbr, "x-audiocast-bitrate:",
-				  sizeof(stempbr));
+	    sizeof(stempbr));
 	if (rc) {
 	    info->icy_bitrate = atoi(stempbr);
 	}
@@ -523,17 +520,17 @@ http_parse_sc_header (const char *url, char *header, SR_HTTP_HEADER *info)
 
     // Check for Apache
     else if (((start = (char *)strstr(header, "Apache")) != NULL) &&
-	     ((start = (char *)strstr(header, "x-audiocast-name")) != NULL)) {
+	((start = (char *)strstr(header, "x-audiocast-name")) != NULL)) {
 	// Streaming straight from apache with audiocast headers
 	extract_header_value(header, info->icy_url, "x-audiocast-server-url:",
-			     sizeof(info->icy_url));
+	    sizeof(info->icy_url));
 	rc = extract_header_value(header, info->icy_name, "x-audiocast-name:",
-				  sizeof(info->icy_name));
+	    sizeof(info->icy_name));
 	info->have_icy_name |= rc;
 	extract_header_value(header, info->icy_genre, "x-audiocast-genre:",
-			     sizeof(info->icy_genre));
+	    sizeof(info->icy_genre));
 	rc = extract_header_value(header, stempbr, "x-audiocast-bitrate:",
-				  sizeof(stempbr));
+	    sizeof(stempbr));
 	if (rc) {
 	    info->icy_bitrate = atoi(stempbr);
 	}
@@ -558,15 +555,11 @@ http_parse_sc_header (const char *url, char *header, SR_HTTP_HEADER *info)
     trim(info->server);
 
     //get the meta interval
-    start = (char*)strstr(header, "icy-metaint:");
+    start = (char*) strstr (header, "icy-metaint:");
     if (start) {
-        sscanf(start, "icy-metaint:%i", &info->meta_interval);
+        sscanf (start, "icy-metaint:%i", &info->meta_interval);
         if (info->meta_interval < 1) {
 	    info->meta_interval = NO_META_INTERVAL;
-#if defined (commentout)
-	    /* GCS: I don't think we want an error here.  */
-            return SR_ERROR_NO_META_INTERVAL;
-#endif
         }
     } else {
         info->meta_interval = NO_META_INTERVAL;
@@ -575,9 +568,8 @@ http_parse_sc_header (const char *url, char *header, SR_HTTP_HEADER *info)
     return SR_SUCCESS;
 }
 
-/* 
- * Constructs a HTTP response header from the SR_HTTP_HEADER struct, if data is null it is not 
- * added to the header
+/* Constructs a HTTP response header from the SR_HTTP_HEADER struct, 
+ * if data is null it is not added to the header
  */
 error_code
 http_construct_sc_response(SR_HTTP_HEADER *info, char *header, int size, int icy_meta_support)
@@ -623,13 +615,6 @@ http_construct_sc_response(SR_HTTP_HEADER *info, char *header, int size, int icy
 	strcat(header, buf);
     }
 
-#if defined (commentout)
-    if (info->icy_name[0])
-    {
-	sprintf(buf, "icy-name:%s\r\n", info->icy_name);
-	strcat(header, buf);
-    }
-#endif
     if (info->have_icy_name) {
 	sprintf(buf, "icy-name:%s\r\n", info->icy_name);
 	strcat(header, buf);
