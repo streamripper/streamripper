@@ -21,12 +21,12 @@
  *   http://mail.nl.linux.org/linux-utf8/2001-06/msg00020.html
  *   http://mail.nl.linux.org/linux-utf8/2001-04/msg00254.html
  */
+#include "sr_config.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
 #include <stddef.h>
-#include "srconfig.h"
 #if defined HAVE_UNISTD_H
 #include <unistd.h>
 #endif

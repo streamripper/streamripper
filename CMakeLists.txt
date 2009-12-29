@@ -17,6 +17,7 @@ ENDIF (NOT CMAKE_BUILD_TYPE)
 ##  Include files
 ##-----------------------------------------------------------------------------
 INCLUDE (CheckFunctionExists)
+INCLUDE (CheckLibraryExists)
 INCLUDE (FindPkgConfig)
 INCLUDE (FindOpenGL)  # Why?
 
@@ -29,7 +30,9 @@ ELSE (UNIX)
   SET (MATH_LIB)
 ENDIF (UNIX)
 
-PKG_CHECK_MODULES (GLIB2 REQUIRED glib-2.0>=2.16)
+IF (UNIX)
+  PKG_CHECK_MODULES (GLIB2 REQUIRED glib-2.0>=2.16)
+ENDIF (UNIX)
 
 SET (CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 FIND_PACKAGE (IBERTY)
@@ -168,8 +171,10 @@ IF (MSVC)
   ADD_EXECUTABLE (glib_iconv_test lib/glib_iconv_test.c)
   TARGET_LINK_LIBRARIES (glib_iconv_test ${STREAMRIPPER_LIBS})
 
+IF (0)
   ADD_EXECUTABLE (glib_win98_test lib/glib_win98_test.c)
   TARGET_LINK_LIBRARIES (glib_win98_test ${STREAMRIPPER_LIBS})
+ENDIF (0)
 ENDIF (MSVC)
 
 ##-----------------------------------------------------------------------------

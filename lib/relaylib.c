@@ -14,8 +14,10 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
+#include "sr_config.h"
 #if WIN32
 #include <winsock2.h>
+#include <ws2tcpip.h>	/* Required for MSVC 9 */
 #else
 #include <sys/time.h>
 #include <sys/types.h>
