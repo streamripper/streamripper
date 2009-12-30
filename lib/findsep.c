@@ -143,8 +143,10 @@ mad_error_string (enum mad_error mad_err)
 	return "MAD_ERROR_BADBITALLOC";
     case MAD_ERROR_BADSCALEFACTOR:
 	return "MAD_ERROR_BADSCALEFACTOR";
+#if defined (MAD_ERROR_BADMODE)
     case MAD_ERROR_BADMODE:
 	return "MAD_ERROR_BADMODE";
+#endif
     case MAD_ERROR_BADFRAMELEN:
 	return "MAD_ERROR_BADFRAMELEN";
     case MAD_ERROR_BADBIGVALUES:

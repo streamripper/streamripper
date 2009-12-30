@@ -40,6 +40,11 @@ FIND_PACKAGE (MAD)
 FIND_PACKAGE (OGG)
 FIND_PACKAGE (VORBIS)
 
+IF (WIN32)
+  SET (MAD_LIBRARIES "${CMAKE_SOURCE_DIR}/win32/libmad-0.15.1b/lib/libmad.lib")
+  SET (MAD_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/win32/libmad-0.15.1b/include")
+ENDIF (WIN32)
+
 INCLUDE (${CMAKE_SOURCE_DIR}/cmake/SR_FindSockets.cmake)
 
 FIND_LIBRARY (SEMAPHORE_LIBRARIES NAMES sem rt)
@@ -52,12 +57,18 @@ INCLUDE_DIRECTORIES (BEFORE ${CMAKE_CURRENT_BINARY_DIR})
 INCLUDE_DIRECTORIES (BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/lib)
 
 IF (WIN32)
-  INCLUDE_DIRECTORIES (BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/win32/glib-2.16.6-1/include/glib-2.0)
-  INCLUDE_DIRECTORIES (BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/win32/glib-2.16.6-1/lib/glib-2.0/include)
-  INCLUDE_DIRECTORIES (BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/libmad-0.15.1b/msvc++)
-  INCLUDE_DIRECTORIES (BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/iconv-win32/static)
-  INCLUDE_DIRECTORIES (BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/win32/libogg-1.1.3)
-  INCLUDE_DIRECTORIES (BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/win32/libvorbis-1.1.2)
+  INCLUDE_DIRECTORIES (BEFORE 
+    "${CMAKE_CURRENT_SOURCE_DIR}/win32/glib-2.16.6-1/include/glib-2.0")
+  INCLUDE_DIRECTORIES (BEFORE 
+    "${CMAKE_CURRENT_SOURCE_DIR}/win32/glib-2.16.6-1/lib/glib-2.0/include")
+  INCLUDE_DIRECTORIES (BEFORE "${MAD_INCLUDE_DIR}")
+  INCLUDE_DIRECTORIES (BEFORE "${CMAKE_CURRENT_SOURCE_DIR}/win32/iconv")
+  INCLUDE_DIRECTORIES (BEFORE 
+    "${CMAKE_CURRENT_SOURCE_DIR}/win32/libogg-1.1.3")
+  INCLUDE_DIRECTORIES (BEFORE 
+    "${CMAKE_CURRENT_SOURCE_DIR}/win32/libvorbis-1.1.2")
+  INCLUDE_DIRECTORIES (BEFORE 
+    "${CMAKE_CURRENT_SOURCE_DIR}/win32/zlib-1.2.3/include")
 ENDIF (WIN32)
 
 ##-----------------------------------------------------------------------------
@@ -82,6 +93,8 @@ SET(WSTREAMRIPPER_SRC
 	winamp_plugin/dock.c
 	winamp_plugin/dock.h
 	winamp_plugin/gen.h
+	winamp_plugin/ioapi.c
+	winamp_plugin/ioapi.h
 	winamp_plugin/ipc_pe.h
 	winamp_plugin/options.c
 	winamp_plugin/options.h
@@ -92,7 +105,11 @@ SET(WSTREAMRIPPER_SRC
 	winamp_plugin/registry.h
 	winamp_plugin/render.c
 	winamp_plugin/render.h
+	winamp_plugin/render_2.c
+	winamp_plugin/render_2.h
 	winamp_plugin/resource.h
+	winamp_plugin/unzip.c
+	winamp_plugin/unzip.h
 	winamp_plugin/wa_ipc.h
 	winamp_plugin/wa_msgids.h
 #	winamp_plugin/winamp_dll.c
@@ -108,8 +125,8 @@ SET(WSTREAMRIPPER_SRC
 ##-----------------------------------------------------------------------------
 IF (WIN32)
   LINK_DIRECTORIES(
-	"${CMAKE_CURRENT_SOURCE_DIR}/libmad-0.15.1b/msvc++/Release"
-	"${CMAKE_CURRENT_SOURCE_DIR}/iconv-win32/static"
+#	"${CMAKE_CURRENT_SOURCE_DIR}/libmad-0.15.1b/msvc++/Release"
+	"${CMAKE_CURRENT_SOURCE_DIR}/win32/iconv"
 	"${CMAKE_CURRENT_SOURCE_DIR}/tre-0.7.2/win32/Release"
 #	"${CMAKE_CURRENT_SOURCE_DIR}/win32/glib-2.12.12/lib"
 #	"${CMAKE_CURRENT_SOURCE_DIR}/win32/glib-2.16.3/lib"
@@ -119,15 +136,17 @@ IF (WIN32)
 #	"c:/gcs6/pkg/libunicows/libunicows-1.1.1-mingw"
 	"${CMAKE_CURRENT_SOURCE_DIR}/win32/libogg-1.1.3"
 	"${CMAKE_CURRENT_SOURCE_DIR}/win32/libvorbis-1.1.2"
+	"${CMAKE_CURRENT_SOURCE_DIR}/win32/zlib-1.2.3/lib"
 	)
 ENDIF (WIN32)
 
+MESSAGE ("MAD_LIBRARIES = ${MAD_LIBRARIES}")
 SET (STREAMRIPPER_LIBS ${MAD_LIBRARIES} ${GLIB2_LIBRARIES} ${MATH_LIB})
 
 IF (WIN32)
-  #SET(STREAMRIPPER_LIBS libmad iconv tre glib-2.0 ws2_32 ogg vorbis)
-  #SET(STREAMRIPPER_LIBS libmad iconv glib-2.0 ws2_32 ogg vorbis)
-  SET(STREAMRIPPER_LIBS libmad iconv unicows glib-2.0 unicows ws2_32 ogg vorbis)
+  SET (STREAMRIPPER_LIBS 
+    ${STREAMRIPPER_LIBS}
+    iconv unicows glib-2.0 unicows ws2_32 ogg vorbis zdll)
 ENDIF (WIN32)
 
 IF (SEMAPHORE_LIBRARIES)

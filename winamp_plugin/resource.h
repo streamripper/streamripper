@@ -3,7 +3,7 @@
 // Used by Script.rc
 //
 #define MANIFEST_RESOURCE_ID            2
-#define RT_MANIFEST                     24
+//#define RT_MANIFEST                     24
 #define IDD_ENABLE                      101
 #define IDI_SR_ICON                     105
 #define IDD_PROPPAGE_CON                106

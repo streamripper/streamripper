@@ -14,12 +14,14 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
+#include "sr_config.h"
 #include <process.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <assert.h>
 #include <windows.h>
 #include "resource.h"
+#include "callback.h"
 #include "srtypes.h"
 #include "rip_manager.h"
 #include "winamp_exe.h"
@@ -423,6 +425,8 @@ UpdateRippingDisplay ()
 	render_set_display_data (IDR_METAINTERVAL, "No track data");
     }
 
+#if defined (commentout)
+    /* GCS FIX! */
     if (m_rmi->filename[0]) {
 	char strsize[50];
 	format_byte_size(strsize, m_rmi->filesize);
@@ -430,6 +434,8 @@ UpdateRippingDisplay ()
     } else {
 	render_set_display_data(IDR_FILENAME, "Getting track data...");
     }
+#endif
+    render_set_display_data(IDR_FILENAME, "Sorry.  Track data disabled.");
 }
 
 VOID CALLBACK
