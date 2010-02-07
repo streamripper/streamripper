@@ -607,11 +607,8 @@ parse_metadata (RIP_MANAGER_INFO* rmi, TRACK_INFO* ti)
 		continue;
 	    }
 	    tmp = g_strndup (query_string, start_pos);
-	    tmp[start_pos] = 0;
-	    subst_string = g_strconcat (tmp,
-					rulep->subst, 
-					&tmp[end_pos],
-					NULL);
+	    subst_string = g_strconcat (tmp, rulep->subst, 
+		&query_string[end_pos],	NULL);
 	    g_free (tmp);
 	    g_match_info_free (match_info);
 	    mstrncpy (query_string, subst_string, MAX_TRACK_LEN);
