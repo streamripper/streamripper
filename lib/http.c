@@ -330,9 +330,10 @@ int
 extract_header_value (char *header, char *dest, char *match, int maxlen)
 {
     char *start = header;
+    size_t len = strlen (match);
     while (*start) {
-	if (!g_ascii_strcasecmp (start, match)) {
-	    subnstr_until (start + strlen(match), "\n", dest, maxlen);
+	if (!g_ascii_strncasecmp (start, match, len)) {
+	    subnstr_until (start + len, "\n", dest, maxlen);
 	    return 1;
 	}
 	start ++;
@@ -706,6 +707,8 @@ http_get_pls (RIP_MANAGER_INFO* rmi, HSOCKET *sock, SR_HTTP_HEADER *info)
     debug_printf ("%s\n", buf);
     debug_printf ("---\n");
 
+    /* Try to find an open server based on the number of open slots 
+       in the Title field.  */
     rc = SR_ERROR_CANT_PARSE_PLS;
     for (s = 1; s <= 99; s++) {
 	char buf1[20];
@@ -713,21 +716,30 @@ http_get_pls (RIP_MANAGER_INFO* rmi, HSOCKET *sock, SR_HTTP_HEADER *info)
 	int best_open = 0;
 
 	sprintf (buf1, "File%d=", s);
+	debug_printf ("Searching for %s in %s\n", buf1, buf);
 	if (!extract_header_value (buf, location_buf, buf1, 
 				   sizeof(location_buf))) {
+	    /* No more URLs in pls */
+	    debug_printf ("s = %d, no more URLs\n", s);
 	    break;
 	}
 	if (s == 1) {
+	    /* Default to first parsed URL */
+	    debug_printf ("Set URL to %s\n", location_buf);
 	    sr_strncpy (info->http_location, location_buf, MAX_HOST_LEN);
 	    rc = SR_SUCCESS;
 	}
 	
 	sprintf (buf1, "Title%d=", s);
 	if (!extract_header_value (buf, title_buf, buf1, sizeof(title_buf))) {
+	    /* Remaining URLs have not title information */
+	    debug_printf ("s = %d, no more title info\n", s);
 	    break;
 	}
-	num_scanned = sscanf (title_buf, "(#%*[0-9] - %d/%d",&used,&total);
+	num_scanned = sscanf (title_buf, "(#%*[0-9] - %d/%d", &used, &total);
 	if (num_scanned != 2) {
+	    /* Title information doesn't have open slots information */
+	    debug_printf ("s = %d, no more open slots info\n", s);
 	    break;
 	}
 	open = total - used;
@@ -737,7 +749,8 @@ http_get_pls (RIP_MANAGER_INFO* rmi, HSOCKET *sock, SR_HTTP_HEADER *info)
 	}
     }
 
-    sr_strncpy (info->http_location, location_buf, MAX_HOST_LEN);
+    debug_printf ("info->http_location = %s\n", info->http_location);
+    //sr_strncpy (info->http_location, location_buf, MAX_HOST_LEN);
 
     return rc;
 }
@@ -820,10 +833,27 @@ http_get_sc_header(RIP_MANAGER_INFO* rmi, const char* url,
     return SR_SUCCESS;
 }
 
-// taken from:
-// Copyright (c) 2000 Virtual Unlimited B.V.
-// Author: Bob Deblier <bob@virtualunlimited.com>
-// thanks bob ;)
+/*
+ * Copyright (c) 2000-2001 Virtual Unlimited B.V.
+ *
+ * Author: Bob Deblier <bob@virtualunlimited.com>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ */
+/* thanks bob ;) */
 #define CHARS_PER_LINE  72
 static char* 
 b64enc(const char *inbuf, int size)
