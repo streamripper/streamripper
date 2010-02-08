@@ -21,6 +21,10 @@ INCLUDE (CheckLibraryExists)
 INCLUDE (FindPkgConfig)
 INCLUDE (FindOpenGL)  # Why?
 
+# http://www.cmake.org/pipermail/cmake/2008-December/025886.html
+INCLUDE (InstallRequiredSystemLibraries)
+
+
 ##-----------------------------------------------------------------------------
 ##  Find libraries
 ##-----------------------------------------------------------------------------
@@ -78,6 +82,24 @@ CONFIGURE_FILE (${CMAKE_CURRENT_SOURCE_DIR}/sr_config.h.cmake
   ${CMAKE_CURRENT_BINARY_DIR}/sr_config.h)
 
 ##-----------------------------------------------------------------------------
+##  Copy dlls
+##-----------------------------------------------------------------------------
+IF (WIN32)
+  EXECUTE_PROCESS (COMMAND ${CMAKE_COMMAND} "-E" "copy" 
+    "${CMAKE_CURRENT_SOURCE_DIR}/win32/glib-2.16.6-1/bin/libglib-2.0-0.dll"
+    "${CMAKE_CURRENT_BINARY_DIR}")
+  EXECUTE_PROCESS (COMMAND ${CMAKE_COMMAND} "-E" "copy" 
+    "${CMAKE_CURRENT_SOURCE_DIR}/win32/mingw/libiconv-2.dll"
+    "${CMAKE_CURRENT_BINARY_DIR}")
+  EXECUTE_PROCESS (COMMAND ${CMAKE_COMMAND} "-E" "copy" 
+    "${CMAKE_CURRENT_SOURCE_DIR}/win32/mingw/libintl-8.dll"
+    "${CMAKE_CURRENT_BINARY_DIR}")
+  EXECUTE_PROCESS (COMMAND ${CMAKE_COMMAND} "-E" "copy" 
+    "${CMAKE_CURRENT_SOURCE_DIR}/win32/zlib-1.2.3/zlib1.dll"
+    "${CMAKE_CURRENT_BINARY_DIR}")
+ENDIF (WIN32)
+
+##-----------------------------------------------------------------------------
 ##  Build subdirectories
 ##-----------------------------------------------------------------------------
 ADD_SUBDIRECTORY (lib)
@@ -90,6 +112,8 @@ SET(STREAMRIPPER_SRC
 	)
 
 SET(WSTREAMRIPPER_SRC
+	winamp_plugin/debug_box.c
+	winamp_plugin/debug_box.h
 	winamp_plugin/dock.c
 	winamp_plugin/dock.h
 	winamp_plugin/gen.h
@@ -117,7 +141,7 @@ SET(WSTREAMRIPPER_SRC
 	winamp_plugin/winamp_exe.c
 	winamp_plugin/winamp_exe.h
 	winamp_plugin/wstreamripper.h
-#	winamp_plugin/Script.rc
+	winamp_plugin/Script.rc
 	)
 
 ##-----------------------------------------------------------------------------
@@ -200,3 +224,4 @@ ENDIF (MSVC)
 ##  Install
 ##-----------------------------------------------------------------------------
 INSTALL(TARGETS streamripper DESTINATION bin)
+INSTALL(TARGETS wstreamripper DESTINATION bin)

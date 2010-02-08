@@ -22,6 +22,7 @@
 #include <windows.h>
 #include "resource.h"
 #include "callback.h"
+#include "debug_box.h"
 #include "srtypes.h"
 #include "rip_manager.h"
 #include "winamp_exe.h"
@@ -861,6 +862,8 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance,
     MSG msg;
     int arg1, arg2;
     int exit_code;
+
+    debug_box ("Hello world");
 
     m_hinstance = hInstance;
 
