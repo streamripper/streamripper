@@ -43,6 +43,7 @@ FIND_PACKAGE (IBERTY)
 FIND_PACKAGE (MAD)
 FIND_PACKAGE (OGG)
 FIND_PACKAGE (VORBIS)
+FIND_PACKAGE (Threads)
 
 IF (WIN32)
   SET (MAD_LIBRARIES "${CMAKE_SOURCE_DIR}/win32/libmad-0.15.1b/lib/libmad.lib")
@@ -103,6 +104,7 @@ ENDIF (WIN32)
 ##  Build subdirectories
 ##-----------------------------------------------------------------------------
 ADD_SUBDIRECTORY (lib)
+ADD_SUBDIRECTORY (tests)
 
 ##-----------------------------------------------------------------------------
 ##  Source files
@@ -200,7 +202,7 @@ ENDIF (WIN32 AND (MSYS OR MINGW))
 #ADD_LIBRARY (streamripper1 ${STREAMRIPPER_LIB_SRC})
 ADD_EXECUTABLE (streamripper ${STREAMRIPPER_SRC})
 TARGET_LINK_LIBRARIES (streamripper ${MY_MATH_LIB} 
-  streamripper1 ${STREAMRIPPER_LIBS})
+    streamripper1 ${STREAMRIPPER_LIBS} ${CMAKE_THREAD_LIBS_INIT})
 
 IF (WIN32)
     ADD_EXECUTABLE (wstreamripper WIN32 ${WSTREAMRIPPER_SRC})
@@ -224,4 +226,6 @@ ENDIF (MSVC)
 ##  Install
 ##-----------------------------------------------------------------------------
 INSTALL(TARGETS streamripper DESTINATION bin)
-INSTALL(TARGETS wstreamripper DESTINATION bin)
+IF (WIN32)
+  INSTALL(TARGETS wstreamripper DESTINATION bin)
+ENDIF (WIN32)

@@ -36,8 +36,6 @@ http_get_m3u (RIP_MANAGER_INFO* rmi, HSOCKET *sock, SR_HTTP_HEADER *info);
 static error_code
 http_get_sc_header(RIP_MANAGER_INFO* rmi, const char* url, 
 		   HSOCKET *sock, SR_HTTP_HEADER *info);
-static error_code
-http_parse_url(const char *url, URLINFO *urlinfo);
 
 /******************************************************************************
  * Private Vars
@@ -142,53 +140,65 @@ unescape_pct_encoding (char* s)
  * Parse's a url as in http://host:port/path or host/path, etc..
  * and now http://username:password@server:4480
  */
-static error_code
+error_code
 http_parse_url(const char *url, URLINFO *urlinfo)
 { 
     int ret;
     char *s;
-
+    const char *start_path;
+    const char *start_login;
+    const char *start_port;
 
     debug_printf ("http_parse_url: %s\n", url);
 
-    /* if we have a proto, just skip it. should we care about 
+    /* if we have a proto, just skip it. should we care about
        the proto? like fail if it's not http? */
     s = strstr(url, "://");
     if (s) url = s + strlen("://");
     memcpy(urlinfo->path, (void *)"/\0", 2);
 
+    /* the path may contain ':' as well, so
+       check it there is a path */
+    start_path = strchr(url, '/');
+    if (NULL == start_path) {
+        /* no path found, just assume the end of the string */
+        start_path = url + strlen(url);
+    }
+
     /* search for a login '@' token */
-    if (strchr(url, '@') != NULL) {
-	ret = sscanf(url, "%1023[^:]:%1023[^@]", 
-		     urlinfo->username, urlinfo->password);
-	if (ret < 1) {
-	    return SR_ERROR_PARSE_FAILURE;
-	} else if (ret == 1) {
-	    urlinfo->password[0] = '\0';
-	}
-	url = strchr(url, '@') + 1;
-	debug_printf ("Username (escaped): %s\n", urlinfo->username);
-	debug_printf ("Password (escaped): %s\n", urlinfo->password);
-	unescape_pct_encoding (urlinfo->username);
-	unescape_pct_encoding (urlinfo->password);
-	debug_printf ("Username (unescaped): %s\n", urlinfo->username);
-	debug_printf ("Password (unescaped): %s\n", urlinfo->password);
+    start_login = strchr(url, '@');
+    if ((start_login != NULL) && (start_login < start_path)) {
+        ret = sscanf(url, "%1023[^:]:%1023[^@]",
+                     urlinfo->username, urlinfo->password);
+        if (ret < 1) {
+            return SR_ERROR_PARSE_FAILURE;
+        } else if (ret == 1) {
+            urlinfo->password[0] = '\0';
+        }
+        url = start_login + 1;
+        debug_printf ("Username (escaped): %s\n", urlinfo->username);
+        debug_printf ("Password (escaped): %s\n", urlinfo->password);
+        unescape_pct_encoding (urlinfo->username);
+        unescape_pct_encoding (urlinfo->password);
+        debug_printf ("Username (unescaped): %s\n", urlinfo->username);
+        debug_printf ("Password (unescaped): %s\n", urlinfo->password);
     } else {
-	urlinfo->username[0] = '\0';
-	urlinfo->password[0] = '\0';
+        urlinfo->username[0] = '\0';
+        urlinfo->password[0] = '\0';
     }
 
     /* search for a port seperator */
-    if (strchr(url, ':') != NULL) {
-	debug_printf ("Branch 1 (%s)\n", url);
-	ret = sscanf(url, "%511[^:]:%hu/%252s", urlinfo->host, 
-		     (short unsigned int*)&urlinfo->port, urlinfo->path+1);
-	if (urlinfo->port < 1) return SR_ERROR_PARSE_FAILURE;
-	ret -= 1;
+    start_port = strchr(url, ':');
+    if ((start_port != NULL) && (start_port < start_path)) {
+        debug_printf ("Branch 1 (%s)\n", url);
+        ret = sscanf(url, "%511[^:]:%hu/%252s", urlinfo->host,
+                     (short unsigned int*)&urlinfo->port, urlinfo->path+1);
+        if (urlinfo->port < 1) return SR_ERROR_PARSE_FAILURE;
+        ret -= 1;
     } else {
-	debug_printf ("Branch 2 (%s)\n", url);
-	urlinfo->port = 80;
-	ret = sscanf(url, "%511[^/]/%252s", urlinfo->host, urlinfo->path+1);
+        debug_printf ("Branch 2 (%s)\n", url);
+        urlinfo->port = 80;
+        ret = sscanf(url, "%511[^/]/%252s", urlinfo->host, urlinfo->path+1);
     }
     if (ret < 1) return SR_ERROR_INVALID_URL;
 
