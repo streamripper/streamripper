@@ -17,6 +17,7 @@ error_code http_sc_connect (RIP_MANAGER_INFO* rmi,
 			    const char *proxyurl, 
 			    SR_HTTP_HEADER *info, char *useragent, 
 			    char *if_name);
+error_code http_parse_url(const char *url, URLINFO *urlinfo);
 
 
 #endif //__HTTP_H__
