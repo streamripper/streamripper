@@ -19,6 +19,11 @@ DESCRIPTION
 
 
 OPTIONS
+       options are either passed via command line arguments or extracted from
+       streamripper.ini configuration file which is located in 
+       $XDG_CONFIG_HOME/streamripper. A default streamripper.ini is generated 
+       upon installation
+       
        -h
            Print help and exit
 
