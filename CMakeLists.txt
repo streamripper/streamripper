@@ -224,4 +224,6 @@ ENDIF (MSVC)
 ##  Install
 ##-----------------------------------------------------------------------------
 INSTALL(TARGETS streamripper DESTINATION bin)
-INSTALL(TARGETS wstreamripper DESTINATION bin)
+IF (WIN32)
+    INSTALL(TARGETS wstreamripper DESTINATION bin)
+ENDIF (WIN32)
