@@ -34,7 +34,7 @@
 #include <ctype.h>
 #endif
 
-#if __UNIX__
+#if __unix__
 #include <arpa/inet.h>
 #elif __BEOS__
 #include <be/net/netdb.h>   
