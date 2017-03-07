@@ -32,6 +32,7 @@
 #include "external.h"
 #include "ripogg.h"
 #include "track_info.h"
+#include "callback.h"
 
 /******************************************************************************
  * Private functions
