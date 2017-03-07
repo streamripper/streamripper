@@ -50,6 +50,7 @@
  * Private functions
  *****************************************************************************/
 static u_long cbuf2_idx_to_chunk (CBUF2 *cbuf2, u_long idx);
+static u_long cbuf2_add (CBUF2 *cbuf2, u_long pos, u_long len);
 static void cbuf2_get_used_fragments (CBUF2 *cbuf2, u_long* frag1, 
 				      u_long* frag2);
 static void cbuf2_advance_metadata_list (RIP_MANAGER_INFO* rmi, CBUF2* cbuf2);
@@ -363,13 +364,8 @@ cbuf2_insert_chunk (RIP_MANAGER_INFO* rmi,
 	LIST *p;
 	unsigned long page_loc;
 
-#if defined (commentout)
-	/* Fill in this_page_list with ogg page references */
 	rip_ogg_process_chunk (rmi, &this_page_list, data, count, ti);
-#endif
 
-#if defined (commentout)
-	/* Find cbuf2 location of beginning of next page */
 	if (list_empty(&cbuf2->ogg_page_list)) {
 	    page_loc = 0;
 	} else {
@@ -378,14 +374,12 @@ cbuf2_insert_chunk (RIP_MANAGER_INFO* rmi,
 	    page_loc = cbuf2_add (cbuf2, tmp->m_page_start, tmp->m_page_len);
 	}
 	
-	/* Fill in m_page_start (offset of beginning of page within cbuf2) 
-	   for each page in this_page_list */
+	// p = &this_page_list.next;
 	list_for_each (p, &this_page_list) {
 	    tmp = list_entry(p, OGG_PAGE_LIST, m_list);
 	    tmp->m_page_start = page_loc;
 	    page_loc = cbuf2_add (cbuf2, page_loc, tmp->m_page_len);
 	}
-#endif
     }
 
     /* Insert data */
@@ -694,7 +688,7 @@ cbuf2_write_index (CBUF2 *cbuf2)
     return cbuf2_add (cbuf2, cbuf2->base_idx, cbuf2->item_count);
 }
 
-u_long
+static u_long
 cbuf2_add (CBUF2 *cbuf2, u_long pos, u_long len)
 {
     pos += len;

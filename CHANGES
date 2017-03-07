@@ -1,9 +1,3 @@
-New for 1.65.0
-------------------------------------
-* Fix discontinuities in ogg page numbers (#1392868)
-* Many bug fixes
-* Many new bugs
-
 New for 1.64.6
 ------------------------------------
 Mon Mar 30 21:10:13 EDT 2009

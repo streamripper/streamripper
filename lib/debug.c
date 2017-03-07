@@ -41,7 +41,7 @@ FILE* gcsfp = 0;
 static HSEM m_debug_lock;
 static char* debug_filename = 0;
 static char filename_buf[SR_MAX_PATH];
-static char* default_filename = "streamripper-debug-log.txt";
+static char* default_filename = "gcs.txt";
 static int debug_initialized = 0;
 
 void

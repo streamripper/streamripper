@@ -16,7 +16,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include "sr_compat.h"
+#include "compat.h"
 #include "srtypes.h"
 #include "socklib.h"
 #include "http.h"
@@ -582,7 +582,7 @@ http_parse_sc_header (const char *url, char *header, SR_HTTP_HEADER *info)
 error_code
 http_construct_sc_response(SR_HTTP_HEADER *info, char *header, int size, int icy_meta_support)
 {
-    char *buf = (char *) malloc (size);
+    char *buf = (char *)malloc(size);
 
 #if defined (commentout)
     char* test_header = 
@@ -599,12 +599,16 @@ http_construct_sc_response(SR_HTTP_HEADER *info, char *header, int size, int icy
 	"Server: Icecast 2.0.1\r\n\r\n";
 #endif
 
-    if (!info || !header || size < 1) {
-	free (buf);
+    if (!info || !header || size < 1)
 	return SR_ERROR_INVALID_PARAM;
-    }
 
     memset(header, 0, size);
+
+#if defined (commentout)
+    /* GCS - try this */
+    strcpy (header, test_header);
+    return SR_SUCCESS;
+#endif
 
     /* GCS: The code used to give HTTP instead of ICY for the response header, 
 	like this: sprintf(buf, "HTTP/1.0 200 OK\r\n"); */

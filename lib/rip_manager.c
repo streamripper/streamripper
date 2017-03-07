@@ -28,7 +28,6 @@
  *     void rip_manager_cleanup (void);
  *
  *****************************************************************************/
-/*! \file */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -52,15 +51,15 @@
 #include "ripstream.h"
 #include "threadlib.h"
 #include "debug.h"
-#include "sr_compat.h"
+#include "compat.h"
 #include "parse.h"
 #include "http.h"
-#include "callback.h"
 
 /******************************************************************************
  * Private functions
  *****************************************************************************/
 static void ripthread (void *thread_arg);
+static void post_status (RIP_MANAGER_INFO* rmi, int status);
 static error_code start_ripping (RIP_MANAGER_INFO* rmi);
 void destroy_subsystems (RIP_MANAGER_INFO* rmi);
 
@@ -85,10 +84,7 @@ rip_manager_init (void)
     socklib_init();
 }
 
-/** Create a RMI structure and start the ripping thread. 
-    \callgraph
-    \callergraph
-*/
+/* Create a RMI structure and start the ripping thread */
 error_code
 rip_manager_start (RIP_MANAGER_INFO **rmip,
 		   STREAM_PREFS *prefs,
@@ -141,10 +137,6 @@ rip_manager_start (RIP_MANAGER_INFO **rmip,
 				  ripthread, (void*) rmi);
 }
 
-/** Abort ripping threads and processes, and free memory.
-    \callgraph
-    \callergraph
-*/
 void
 rip_manager_stop (RIP_MANAGER_INFO *rmi)
 {
@@ -192,6 +184,7 @@ rip_manager_stop (RIP_MANAGER_INFO *rmi)
 #endif
 }
 
+
 void
 rip_manager_cleanup (void)
 {
@@ -203,6 +196,143 @@ rip_manager_cleanup (void)
  * Private functions
  *****************************************************************************/
 static void
+post_error (RIP_MANAGER_INFO* rmi, error_code err)
+{
+    ERROR_INFO err_info;
+    err_info.error_code = err;
+    strcpy(err_info.error_str, errors_get_string (err));
+    debug_printf ("post_error: %d %s\n", err_info.error_code, 
+		  err_info.error_str);
+    rmi->status_callback (rmi, RM_ERROR, &err_info);
+}
+
+static void
+post_status (RIP_MANAGER_INFO* rmi, int status)
+{
+    if (status != 0)
+        rmi->status = status;
+    rmi->status_callback (rmi, RM_UPDATE, 0);
+}
+
+static void
+compose_console_string (RIP_MANAGER_INFO *rmi, TRACK_INFO* ti)
+{
+    mchar console_string[SR_MAX_PATH];
+    msnprintf (console_string, SR_MAX_PATH, m_S m_(" - ") m_S, 
+	       ti->artist, ti->title);
+    string_from_gstring (rmi, rmi->filename, SR_MAX_PATH, console_string,
+			 CODESET_LOCALE);
+}
+
+/* 
+ * This is called by ripstream when we get a new track. 
+ * most logic is handled by filelib_start() so we just
+ * make sure there are no bad characters in the name and 
+ * update via the callback 
+ */
+error_code
+rip_manager_start_track (RIP_MANAGER_INFO *rmi, TRACK_INFO* ti)
+{
+    int ret;
+
+#if defined (commmentout)
+    /* GCS FIX -- here is where i would compose the incomplete filename */
+    char* trackname = ti->raw_metadata;
+    debug_printf("rip_manager_start_track: %s\n", trackname);
+    if (rmi->write_data && (ret = filelib_start(trackname)) != SR_SUCCESS) {
+        return ret;
+    }
+#endif
+
+    rmi->write_data = ti->save_track;
+
+    if (rmi->write_data && (ret = filelib_start (rmi, ti)) != SR_SUCCESS) {
+        return ret;
+    }
+
+    rmi->filesize = 0;
+
+    /* Compose the string for the console output */
+    compose_console_string (rmi, ti);
+    rmi->filename[SR_MAX_PATH-1] = '\0';
+    rmi->status_callback (rmi, RM_NEW_TRACK, (void*) rmi->filename);
+    post_status(rmi, 0);
+
+    return SR_SUCCESS;
+}
+
+/* Ok, the end_track()'s function is actually to move 
+ * tracks out from the incomplete directory. It does 
+ * get called, but only after the 2nd track is played. 
+ * the first track is *never* complete.
+ */
+error_code
+rip_manager_end_track (RIP_MANAGER_INFO* rmi, TRACK_INFO* ti)
+{
+    mchar mfullpath[SR_MAX_PATH];
+    char fullpath[SR_MAX_PATH];
+
+    if (rmi->write_data) {
+        filelib_end (rmi, ti, rmi->prefs->overwrite,
+		     GET_TRUNCATE_DUPS(rmi->prefs->flags),
+		     mfullpath);
+    }
+    post_status(rmi, 0);
+
+    string_from_gstring (rmi, fullpath, SR_MAX_PATH, mfullpath, CODESET_FILESYS);
+    rmi->status_callback (rmi, RM_TRACK_DONE, (void*)fullpath);
+
+    return SR_SUCCESS;
+}
+
+error_code
+rip_manager_put_data (RIP_MANAGER_INFO *rmi, char *buf, int size)
+{
+    int ret;
+
+    if (GET_INDIVIDUAL_TRACKS(rmi->prefs->flags)) {
+	if (rmi->write_data) {
+	    ret = filelib_write_track (rmi, buf, size);
+	    if (ret != SR_SUCCESS) {
+		debug_printf ("filelib_write_track returned: %d\n",ret);
+		return ret;
+	    }
+	}
+    }
+
+    rmi->filesize += size;	/* This is used by the GUI */
+    rmi->bytes_ripped += size;	/* This is used to determine when to quit */
+    while (rmi->bytes_ripped >= 1048576) {
+	rmi->bytes_ripped -= 1048576;
+	rmi->megabytes_ripped++;
+    }
+
+    return SR_SUCCESS;
+}
+
+char *
+client_relay_header_generate (RIP_MANAGER_INFO* rmi, int icy_meta_support)
+{
+    int ret;
+    char *headbuf;
+
+    headbuf = (char *) malloc (MAX_HEADER_LEN);
+    ret = http_construct_sc_response (&rmi->http_info, headbuf, MAX_HEADER_LEN,
+				      icy_meta_support);
+    if (ret != SR_SUCCESS) {
+	headbuf[0] = 0;
+    }
+    
+    return headbuf;
+}
+
+void
+client_relay_header_release (char *ch)
+{
+    free (ch);
+}
+
+static void
 debug_ripthread (RIP_MANAGER_INFO* rmi)
 {
     debug_printf ("------ RIP_MANAGER_INFO -------\n");
@@ -210,17 +340,13 @@ debug_ripthread (RIP_MANAGER_INFO* rmi)
     debug_printf ("server_name = %s\n", rmi->server_name);
     debug_printf ("bitrate = %d\n", rmi->bitrate);
     debug_printf ("meta_interval = %d\n", rmi->meta_interval);
+    debug_printf ("filename = %s\n", rmi->filename);
+    debug_printf ("filesize = %d\n", rmi->filesize);
     debug_printf ("status = %d\n", rmi->status);
     debug_printf ("track_count = %d\n", rmi->track_count);
     debug_printf ("external_process = %p\n", rmi->ep);
 }
 
-/** Main function launched by ripping thread.
-    This function loops, calling ripstream_rip(), and then posting 
-    status to caller and checks for abort conditions.
-    \callgraph
-    \callergraph
-*/
 static void
 ripthread (void *thread_arg)
 {
@@ -234,12 +360,12 @@ ripthread (void *thread_arg)
     if (ret != SR_SUCCESS) {
 	debug_printf ("Ripthread did start_ripping()\n");
 	threadlib_signal_sem (&rmi->started_sem);
-	callback_post_error (rmi, ret);
+	post_error (rmi, ret);
 	goto DONE;
     }
 
     rmi->status_callback (rmi, RM_STARTED, (void *)NULL);
-    callback_post_status (rmi, RM_STATUS_BUFFERING);
+    post_status (rmi, RM_STATUS_BUFFERING);
     debug_printf ("Ripthread did initialization\n");
     threadlib_signal_sem(&rmi->started_sem);
 
@@ -260,11 +386,11 @@ ripthread (void *thread_arg)
 	    break;
 	}
 	else if (ret == SR_SUCCESS_BUFFERING) {
-	    callback_post_status (rmi, RM_STATUS_BUFFERING);
+	    post_status (rmi, RM_STATUS_BUFFERING);
 	    /* Fall through */
 	}
 	else if (ret == SR_ERROR_CANT_DECODE_MP3) {
-	    callback_post_error (rmi, ret);
+	    post_error (rmi, ret);
 	    continue;
 	}
 	else if ((ret == SR_ERROR_RECV_FAILED || 
@@ -273,7 +399,7 @@ ripthread (void *thread_arg)
 		  ret == SR_ERROR_SELECT_FAILED) && 
 		 GET_AUTO_RECONNECT (rmi->prefs->flags)) {
 	    /* Try to reconnect */
-	    callback_post_status (rmi, RM_STATUS_RECONNECTING);
+	    post_status (rmi, RM_STATUS_RECONNECTING);
 	    while (rmi->started) {
 		socklib_close(&rmi->stream_sock);
 		if (rmi->ep) {
@@ -298,13 +424,13 @@ ripthread (void *thread_arg)
 	}
 	else if (ret != SR_SUCCESS) {
 	    destroy_subsystems (rmi);
-	    callback_post_error (rmi, ret);
+	    post_error (rmi, ret);
 	    break;
 	}
 
 	/* All systems go.  Caller should update GUI that it is ripping */
-	if (rmi->callback_filesize > 0) {
-	    callback_post_status (rmi, RM_STATUS_RIPPING);
+	if (rmi->filesize > 0) {
+	    post_status (rmi, RM_STATUS_RIPPING);
 	}
     }
 
@@ -320,7 +446,7 @@ ripthread (void *thread_arg)
 void
 destroy_subsystems (RIP_MANAGER_INFO* rmi)
 {
-    ripstream_destroy (rmi);
+    ripstream_clear (rmi);
     relaylib_stop (rmi);
     /* GCS Feb 17,2008.  The socklib_cleanup() is done at program 
        shutdown, not rip_manager shutdown. */
@@ -435,14 +561,14 @@ start_ripping (RIP_MANAGER_INFO* rmi)
     /* Allocate buffers for ripstream */
     strcpy(rmi->no_meta_name, rmi->http_info.icy_name);
     rmi->getbuffer = 0;
+    ripstream_clear (rmi);
     ret = ripstream_init(rmi);
     if (ret != SR_SUCCESS) {
-	ripstream_destroy (rmi);
+	ripstream_clear (rmi);
 	goto RETURN_ERR;
     }
 
     /* Launch relay server threads */
-    debug_printf ("start_ripping: checkpoint 3\n");
     if (GET_MAKE_RELAY (rmi->prefs->flags)) {
 	u_short new_port = 0;
 	ret = relaylib_start (rmi, 
@@ -467,8 +593,7 @@ start_ripping (RIP_MANAGER_INFO* rmi)
     }
 
     /* Done. */
-    debug_printf ("start_ripping: checkpoint 4\n");
-    callback_post_status (rmi, RM_STATUS_BUFFERING);
+    post_status (rmi, RM_STATUS_BUFFERING);
     return SR_SUCCESS;
 
  RETURN_ERR:

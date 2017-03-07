@@ -18,8 +18,10 @@
 #define __SRTYPES_H__
 
 #include <glib.h>
-#include "sr_config.h"
-#include "sr_compat.h"
+
+//#include "regex.h"
+#include "srconfig.h"
+#include "compat.h"
 #include "list.h"
 #if WIN32
 /* Warning: Not allowed to mix windows.h & cdk.h */
@@ -28,7 +30,13 @@
 #include <sys/types.h>
 #endif
 
-#include "sr_stdint.h"
+#if HAVE_INTTYPES_H
+# include <inttypes.h>
+#else
+# if HAVE_STDINT_H
+#  include <stdint.h>
+# endif
+#endif
 
 #if HAVE_SYS_SOCKIO_H
 #include <sys/sockio.h>
@@ -58,7 +66,7 @@ typedef unsigned int uint32_t;
 #include <stddef.h>
 #endif
 
-#if OGG_VORBIS_FOUND
+#if (HAVE_OGG_VORBIS)
 #include <ogg/ogg.h>
 #endif
 
@@ -76,25 +84,29 @@ typedef unsigned int uint32_t;
     fixing this for other platforms. */
 #define SR_MAX_PATH		254
 #define MAX_HOST_LEN		512
-#define MAX_IP_LEN		(3+1+3+1+3+1+3+1)
+#define MAX_IP_LEN			3+1+3+1+3+1+3+1
 #define MAX_HEADER_LEN		8192
 #define MAX_URL_LEN		8192
 #define MAX_VERSION_LEN		256
 #define MAX_ICY_STRING		4024
 #define MAX_SERVER_LEN		1024
+//#define MAX_TRACK_LEN		MAX_PATH
 #define MAX_TRACK_LEN		SR_MAX_PATH /* GCS - be careful here... */
 #define MAX_URI_STRING		1024
 #define MAX_ERROR_STR           (4096)
 #define MAX_USERAGENT_STR	1024
 #define MAX_AUTH_LEN            255
-#define MAX_METADATA_LEN        (127*16)
+//#define MAX_DROPSTRING_LEN      255
+
+#define MAX_METADATA_LEN (127*16)
+
 #define MAX_STATUS_LEN		256
 #define MAX_STREAMNAME_LEN	1024
 #define MAX_SERVER_LEN		1024
-#define MAX_EXT_LINE_LEN        255
-#define MAX_CODESET_STRING      128
+#define MAX_EXT_LINE_LEN 255
 
 #define DEFAULT_META_INTERVAL	1024
+
 
 #ifdef WIN32
   #ifndef _WINSOCKAPI_
@@ -107,9 +119,6 @@ typedef unsigned long u_long;
 typedef unsigned char u_char;
 typedef unsigned short u_short;
 #endif
-
-/* Streamripper internal error codes */
-typedef int error_code;
 
 /* Different types of streams */
 #define CONTENT_TYPE_MP3		1
@@ -133,6 +142,18 @@ typedef struct IO_DATA_INPUTst{
 #define NO_TRACK_STR	"No track info..."
 
 /* 
+ * IO_GET_STREAM is an interface for getting data and track info from
+ * a better splite on the track seperation. it keeps a back buffer and 
+ * does the "find silent point" shit.
+ */
+#if defined (commentout)
+typedef struct IO_GET_STREAMst{
+	int (*get_stream_data)(char* data_buf, char *track_buf);
+	u_long getsize;
+} IO_GET_STREAM;
+#endif
+
+/* 
  * SPLITPOINT_OPTIONS are the options used to tweek how the silence 
  * separation is done.
  */
@@ -144,6 +165,9 @@ typedef struct SPLITPOINT_OPTIONSst
     int xs_search_window_1;
     int xs_search_window_2;
     int xs_offset;
+    //int xd_offset;
+    //int xpadding_1;
+    //int xpadding_2;
     int xs_padding_1;
     int xs_padding_2;
 } SPLITPOINT_OPTIONS;
@@ -152,6 +176,7 @@ typedef struct SPLITPOINT_OPTIONSst
  * CODESET_OPTIONS are the options used to decide how to parse
  * and convert the metadata
  */
+#define MAX_CODESET_STRING 128
 typedef struct CODESET_OPTIONSst
 {
     char codeset_locale[MAX_CODESET_STRING];
@@ -258,11 +283,11 @@ typedef struct SR_HTTP_HEADERst
 
 typedef struct URLINFOst
 {
-    char host[MAX_HOST_LEN];
-    char path[SR_MAX_PATH];
-    u_short port;
-    char username[MAX_URI_STRING];
-    char password[MAX_URI_STRING];
+	char host[MAX_HOST_LEN];
+	char path[SR_MAX_PATH];
+	u_short port;
+	char username[MAX_URI_STRING];
+	char password[MAX_URI_STRING];
 } URLINFO;
 
 typedef struct external_process External_Process;
@@ -284,21 +309,6 @@ struct external_process
     char metadata_buf[MAX_EXT_LINE_LEN];
 };
 
-typedef struct metadata Metadata;
-struct metadata
-{
-    /* m_composed_metadata includes 1 byte for size*16 */
-    char    m_composed_metadata[MAX_METADATA_LEN+1];
-    /* m_node is pointer to chunk associated with metadata */
-    GList   *m_node;
-};
-
-
-/* These are the ogg page flags below */
-#define OGG_PAGE_BOS        0x01
-#define OGG_PAGE_EOS        0x02
-#define OGG_PAGE_2          0x04
-
 /* Each ogg page boundary within the cbuf gets this struct */
 typedef struct OGG_PAGE_LIST_struct OGG_PAGE_LIST;
 struct OGG_PAGE_LIST_struct
@@ -311,85 +321,51 @@ struct OGG_PAGE_LIST_struct
     LIST m_list;
 };
 
-typedef struct cbuf3 Cbuf3;
-struct cbuf3 {
-    HSEM        sem;
-
-    GQueue      *buf;             /**< Filled portion of buffer */
-    GQueue      *free_list;       /**< Free chunks */
-    char        *pending;         /**< Filled, but not yet ready for relay */
-
-    u_long      num_chunks;
-    u_long	chunk_size;
-    int         have_relay;
-
+typedef struct CBUF2_struct
+{
+    char*	buf;
     int         content_type;
+    int         have_relay;
+    u_long	num_chunks;
+    u_long	chunk_size;
+    u_long	size;        /* size is chunk_size * num_chunks */
+    u_long	base_idx;
+    u_long	item_count;  /* Amount filled */
+    u_long	next_song;   /* start of next song (mp3 only) */
+    OGG_PAGE_LIST* song_page;    /* current page being written (ogg only) */
+    u_long      song_page_done;  /* amount finished in current page (ogg) */
 
-    /* This should be moved out of cbuf */
-    GQueue      *write_list;      /**< List of writers with tracks to write */
+    HSEM        cbuf_sem;
 
-    /* Ogg stuff */
-    GQueue      *ogg_page_refs;   /**< List of pointers to ogg pages */
-    GList       *written_page;    /**< Most recently written page */
-
-    /* MP3/AAC/NSV stuff */
-    GQueue      *metadata_list;   /**< List of all metadata */
-};
-
-typedef struct cbuf3_pointer Cbuf3_pointer;
-struct cbuf3_pointer
-{
-    GList      *node;
-    u_long      offset;
-};
-
-/* The location of the beginning of each ogg page within the cbuf 
-   is stored in an list of Ogg_page_references.  */
-typedef struct ogg_page_reference Ogg_page_reference;
-struct ogg_page_reference
-{
-    Cbuf3_pointer    m_cbuf3_loc;
-    unsigned long    m_page_len;
-    unsigned long    m_page_flags;
-    char            *m_header_buf_ptr;
-    unsigned long    m_header_buf_len;
-};
-
-/* These are pointers to song boundaries for write_list (MP3 only) */
-typedef struct writer Writer;
-struct writer
-{
-    int              m_started;
-    int              m_ended;
-    int              m_track_no;
-    Cbuf3_pointer    m_next_byte;
-    Cbuf3_pointer    m_last_byte;
-    FHANDLE          m_file;
-    TRACK_INFO       m_ti;
-};
+    LIST        metadata_list;
+    LIST        ogg_page_list;
+    LIST        frame_list;
+} CBUF2;
 
 
-/* The relay server keeps track of a list of clients */
-typedef struct relay_client Relay_client;
-struct relay_client
+/* Each relay server gets this list of clients */
+typedef struct RELAY_LIST_struct RELAY_LIST;
+struct RELAY_LIST_struct
 {
     SOCKET m_sock;
     int m_is_new;
-    int m_icy_metadata;          // true if client requested metadata
     
-    char* m_buffer;              // large enough for 1 block & 1 metadata
+    char* m_buffer;            // large enough for 1 block & 1 metadata
     u_long m_buffer_size;
-    u_long m_offset;             // offset within buffer
+    u_long m_cbuf_offset;      // must lie along chunck boundary for mp3
+    u_long m_offset;
     u_long m_left_to_send;
+    int m_icy_metadata;        // true if client requested metadata
 
-    Cbuf3_pointer m_cbuf_ptr;    // lies along chunck boundary for mp3
+    char* m_header_buf_ptr;    // for ogg header pages
+    u_long m_header_buf_len;   // for ogg header pages
+    u_long m_header_buf_off;   // for ogg header pages
 
-    char* m_header_buf_ptr;      // for ogg header pages
-    u_long m_header_buf_len;     // for ogg header pages
-    u_long m_header_buf_off;     // for ogg header pages
+    RELAY_LIST* m_next;
 };
 
-#if OGG_VORBIS_FOUND
+
+#if (HAVE_OGG_VORBIS)
 typedef struct _stream_processor {
     void (*process_end)(struct _stream_processor *);
     int isillegal;
@@ -429,6 +405,7 @@ struct RELAYLIB_INFO_struct
 typedef struct FILELIB_INFO_struct FILELIB_INFO;
 struct FILELIB_INFO_struct
 {
+    FHANDLE m_file;
     FHANDLE m_show_file;
     FHANDLE m_cue_file;
     int m_count;
@@ -532,6 +509,7 @@ struct RIP_MANAGER_INFOst
     STREAM_PREFS *prefs;
     char streamname[MAX_STREAMNAME_LEN];
     char server_name[MAX_SERVER_LEN];
+    u_long filesize;
     int	status;
     int	meta_interval;
 
@@ -543,6 +521,9 @@ struct RIP_MANAGER_INFOst
 
     /* Bitrate used to compute buffer size */
     int bitrate;
+
+    /* it's not the filename, it's the trackname */
+    char filename[SR_MAX_PATH];
 
     /* Process id & handle for external process */
     External_Process *ep;
@@ -569,10 +550,6 @@ struct RIP_MANAGER_INFOst
     /* Callback function */
     //void (*m_status_callback)(RIP_MANAGER_INFO* rmi, int message, void *data);
     RIP_MANAGER_CALLBACK status_callback;
-
-    /* Callback data */
-    u_long callback_filesize;             /* bytes written to current track */
-    char callback_filename[SR_MAX_PATH];  /* not the filename, the trackname */
 
     /* Bytes ripped is stored to send to callback, also used to decide 
        when to stop based on bytes ripped. */
@@ -614,7 +591,7 @@ struct RIP_MANAGER_INFOst
     unsigned int track_count;
 
     /* The circular buffer */
-    struct cbuf3 cbuf3;
+    CBUF2 cbuf2;
 
     /* CBuf size variables.  Used by ripstream.c */
     int cbuf2_size;             /* blocks */
@@ -624,7 +601,8 @@ struct RIP_MANAGER_INFOst
     int mic_to_cb_end;          /* blocks */
 
     /* The Relay list */
-    GQueue *relay_list;
+    RELAY_LIST* relay_list;
+    unsigned long relay_list_len;
     HSEM relay_list_sem;
 
     /* Private data used by filelib.c */
@@ -636,7 +614,7 @@ struct RIP_MANAGER_INFOst
     /* Private data used by parse.c */
     Parse_Rule* parse_rules;
 
-#if OGG_VORBIS_FOUND
+#if (HAVE_OGG_VORBIS)
     /* Ogg state, used by ripogg.c */
     ogg_sync_state ogg_sync;
     ogg_page ogg_pg;
@@ -644,10 +622,10 @@ struct RIP_MANAGER_INFOst
     char* ogg_curr_header;
     int ogg_curr_header_len;
 #endif
-    uint32_t ogg_fixed_page_no;
 
     /* Mchar codesets -- these shadow prefs codesets */
     CODESET_OPTIONS mchar_cs;
 };
 
-#endif
+
+#endif //__SRIPPER_H__

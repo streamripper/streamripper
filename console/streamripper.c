@@ -23,6 +23,7 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 #if WIN32
+//#define sleep	Sleep
 #include <windows.h>
 #else
 #include <unistd.h>
@@ -35,7 +36,6 @@
 #include <math.h>
 #include <time.h>
 #include "srtypes.h"
-#include "callback.h"
 #include "rip_manager.h"
 #include "prefs.h"
 #include "mchar.h"
@@ -173,7 +173,7 @@ print_status (RIP_MANAGER_INFO *rmi)
     if (m_dont_print)
 	return;
 
-    if (printed_fullinfo && rmi->callback_filename[0]) {
+    if (printed_fullinfo && rmi->filename[0]) {
 
 	switch(rmi->status)
 	{
@@ -187,7 +187,7 @@ print_status (RIP_MANAGER_INFO *rmi)
 
 	    print_to_console ("[%14s] %.50s\r",
 			      status_str,
-			      rmi->callback_filename);
+			      rmi->filename);
 	    break;
 
 	case RM_STATUS_RIPPING:
@@ -196,10 +196,10 @@ print_status (RIP_MANAGER_INFO *rmi)
 	    } else {
 		strcpy(status_str, "ripping...    ");
 	    }
-	    format_byte_size(filesize_str, rmi->callback_filesize);
+	    format_byte_size(filesize_str, rmi->filesize);
 	    print_to_console ("[%14s] %.50s [%7s]\r",
 			      status_str,
-			      rmi->callback_filename,
+			      rmi->filename,
 			      filesize_str);
 	    break;
 	case RM_STATUS_RECONNECTING:

@@ -31,7 +31,7 @@
 #include "debug.h"
 #include "mchar.h"
 #include "external.h"
-#include "sr_compat.h"
+#include "compat.h"
 
 /* Unix:
 http://www.cs.uleth.ca/~holzmann/C/system/pipeforkexec.html

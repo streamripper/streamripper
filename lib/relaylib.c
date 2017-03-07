@@ -45,9 +45,9 @@
 #include "socklib.h"
 #include "threadlib.h"
 #include "debug.h"
-#include "sr_compat.h"
+#include "compat.h"
 #include "rip_manager.h"
-#include "cbuf3.h"
+#include "cbuf2.h"
 
 #if defined (WIN32)
 #ifdef errno
@@ -56,18 +56,13 @@
 #define errno WSAGetLastError()
 #endif
 
-//#define BURST_AMOUNT (128*1024)
-//#define BURST_AMOUNT (64*1024)
-#define BURST_AMOUNT (32*1024)
-
-
 /*****************************************************************************
  * Private functions
  *****************************************************************************/
-static void relaylib_accept_thread_main (void *arg);
+static void thread_accept (void *arg);
 static error_code try_port (RELAYLIB_INFO* rli, u_short port, 
 			    char *if_name, char *relay_ip);
-static void relaylib_send_thread_main (void *arg);
+static void thread_send (void *arg);
 static error_code relaylib_start_threads (RIP_MANAGER_INFO* rmi);
 
 #define BUFSIZE (1024)
@@ -75,27 +70,24 @@ static error_code relaylib_start_threads (RIP_MANAGER_INFO* rmi);
 #define HTTP_HEADER_DELIM "\n"
 #define ICY_METADATA_TAG "Icy-MetaData:"
 
-
-void
-relaylib_free_relay_client (Relay_client *relay_client,
-			    void * not_used)
+static void
+destroy_all_hostsocks (RIP_MANAGER_INFO* rmi)
 {
-    closesocket (relay_client->m_sock);
-    if (relay_client->m_buffer) {
-	free (relay_client->m_buffer);
-    }
-    free (relay_client);
-}
+    RELAY_LIST* ptr;
 
-void
-relaylib_free_relay_client_list (RIP_MANAGER_INFO* rmi)
-{
     threadlib_waitfor_sem (&rmi->relay_list_sem);
-
-    g_queue_foreach (rmi->relay_list, (GFunc) relaylib_free_relay_client, 0);
-    g_queue_free (rmi->relay_list);
-    rmi->relay_list = 0;
-
+    while (rmi->relay_list != NULL) {
+        ptr = rmi->relay_list;
+        closesocket(ptr->m_sock);
+        rmi->relay_list = ptr->m_next;
+        if (ptr->m_buffer != NULL) {
+            free (ptr->m_buffer);
+            ptr->m_buffer = NULL;
+        }
+        free(ptr);
+    }
+    rmi->relay_list_len = 0;
+    rmi->relay_list = NULL;
     threadlib_signal_sem (&rmi->relay_list_sem);
 }
 
@@ -195,10 +187,10 @@ swallow_receive (int sock)
         FD_SET(sock, &fds);
         tv.tv_sec = 0;
         tv.tv_usec = 0;
-        ret = select (sock + 1, &fds, NULL, NULL, &tv);
+        ret = select(sock + 1, &fds, NULL, NULL, &tv);
         if (ret == 1) {
             // Read and throw away data, ignoring errors
-            ret = recv (sock, buf, BUFSIZE, 0);
+            ret = recv(sock, buf, BUFSIZE, 0);
             if (ret > 0) {
                 hasmore = TRUE;
             }
@@ -275,7 +267,8 @@ relaylib_start (RIP_MANAGER_INFO* rmi,
 
     debug_printf ("relaylib_start()\n");
 
-    rmi->relay_list = g_queue_new ();
+    rmi->relay_list = 0;
+    rmi->relay_list_len = 0;
 
 #ifdef WIN32
     if (WSAStartup(MAKEWORD(2,2), &wsd) != 0) {
@@ -415,7 +408,7 @@ relaylib_stop (RIP_MANAGER_INFO* rmi)
     debug_printf ("waiting for relay close\n");
     threadlib_waitforclose (&rli->m_hthread_accept);
     threadlib_waitforclose (&rli->m_hthread_send);
-    relaylib_free_relay_client_list (rmi);
+    destroy_all_hostsocks (rmi);
     threadlib_destroy_sem (&rli->m_sem_not_connected);
 
     debug_printf("relaylib_stop:done!\n");
@@ -429,111 +422,40 @@ relaylib_start_threads (RIP_MANAGER_INFO* rmi)
 
     rli->m_running = TRUE;
 
-    debug_printf ("Starting accept thread\n");
     ret = threadlib_beginthread (&rli->m_hthread_accept, 
-				 relaylib_accept_thread_main, 
-				 (void*) rmi);
+				 thread_accept, (void*) rmi);
     if (ret != SR_SUCCESS) return ret;
     rli->m_running_accept = TRUE;
 
-    debug_printf ("Starting send thread\n");
     ret = threadlib_beginthread (&rli->m_hthread_send, 
-				 relaylib_send_thread_main,
-				 (void*) rmi);
+				 thread_send, (void*) rmi);
     if (ret != SR_SUCCESS) return ret;
     rli->m_running_send = TRUE;
 
     return SR_SUCCESS;
 }
 
-static char *
-client_relay_header_generate (RIP_MANAGER_INFO* rmi, int icy_meta_support)
-{
-    int ret;
-    char *headbuf;
-
-    headbuf = (char *) malloc (MAX_HEADER_LEN);
-    ret = http_construct_sc_response (&rmi->http_info, headbuf, MAX_HEADER_LEN,
-				      icy_meta_support);
-    if (ret != SR_SUCCESS) {
-	headbuf[0] = 0;
-    }
-    
-    return headbuf;
-}
-
-static void
-client_relay_header_release (char *ch)
-{
-    free (ch);
-}
-
-static Relay_client*
-relay_client_add (RIP_MANAGER_INFO *rmi, int newsock, int client_wants_metadata)
-{
-    Relay_client *new_client;
-    Cbuf3 *cbuf3 = &rmi->cbuf3;
-    int streamripper_gets_metadata;
-
-    if (rmi->http_info.meta_interval == NO_META_INTERVAL) {
-	streamripper_gets_metadata = 0;
-    } else {
-	streamripper_gets_metadata = 1;
-    }
-
-    debug_printf ("Creating new client\n");
-    new_client = (Relay_client*) malloc (sizeof (Relay_client));
-    if (new_client != NULL) {
-	int buffer_size;
-	int burst_amount = BURST_AMOUNT;
-
-	new_client->m_sock = newsock;
-	if (streamripper_gets_metadata) {
-	    new_client->m_icy_metadata = client_wants_metadata;
-	} else {
-	    new_client->m_icy_metadata = 0;
-	}
-	if (new_client->m_icy_metadata) {
-	    buffer_size = cbuf3->chunk_size + 16*256;
-	} else {
-	    buffer_size = cbuf3->chunk_size;
-	}
-
-	new_client->m_offset = 0;
-	new_client->m_left_to_send = 0;
-	new_client->m_buffer = (char*) malloc (sizeof(char)*buffer_size);
-	new_client->m_buffer_size = buffer_size;
-	new_client->m_cbuf_ptr.node = 0;
-
-	/* GCS FIX: Watch deadlocks. Lock cbuf3, then lock relay (?) */
-	debug_printf ("relay_client_add is waiting for &rmi->relay_list_sem\n");
-	threadlib_waitfor_sem (&rmi->relay_list_sem);
-	debug_printf ("relay_client_add got &rmi->relay_list_sem\n");
-	debug_printf ("Pushing relay client onto relay_list\n");
-	g_queue_push_tail (rmi->relay_list, new_client);
-	debug_printf ("Registering relay client with cbuf3\n");
-	cbuf3_initialize_relay_client_ptr (cbuf3, new_client, burst_amount);
-	threadlib_signal_sem (&rmi->relay_list_sem);
-	debug_printf ("relay_client_add released &rmi->relay_list_sem\n");
-    }
-    return new_client;
-}
-
-static void
-relaylib_accept_thread_main (void *arg)
+void
+thread_accept (void* arg)
 {
     int ret;
     int newsock;
     BOOL good;
     struct sockaddr_in client;
     socklen_t iAddrSize = sizeof(client);
-    //RELAY_LIST* newhostsock;
-    Relay_client *new_client;
-    int client_wants_metadata;
+    RELAY_LIST* newhostsock;
+    int icy_metadata;
     char* client_http_header;
     RIP_MANAGER_INFO* rmi = (RIP_MANAGER_INFO*) arg;
     RELAYLIB_INFO* rli = &rmi->relaylib_info;
     STREAM_PREFS* prefs = rmi->prefs;
+    int have_metadata;
+
+    if (rmi->http_info.meta_interval == NO_META_INTERVAL) {
+	have_metadata = 0;
+    } else {
+	have_metadata = 1;
+    }
 
     debug_printf("thread_accept:start\n");
 
@@ -562,19 +484,16 @@ relaylib_accept_thread_main (void *arg)
             FD_SET (rli->m_listensock, &fds);
             tv.tv_sec = 1;
             tv.tv_usec = 0;
-	    //debug_printf("thread_accept:calling select()\n");
+	    debug_printf("thread_accept:calling select()\n");
             ret = select (rli->m_listensock + 1, &fds, NULL, NULL, &tv);
-	    //debug_printf("thread_accept:select() returned %d\n", ret);
+	    debug_printf("thread_accept:select() returned %d\n", ret);
             if (ret == 1) {
                 unsigned long num_connected;
                 /* If connections are full, do nothing.  Note that 
                     m_max_connections is 0 for infinite connections allowed. */
-		debug_printf ("relaylib_accept_thread_main is waiting for &rmi->relay_list_sem\n");
                 threadlib_waitfor_sem (&rmi->relay_list_sem);
-		debug_printf ("relaylib_accept_thread_main got &rmi->relay_list_sem\n");
-                num_connected = g_queue_get_length (rmi->relay_list);
+                num_connected = rmi->relay_list_len;
                 threadlib_signal_sem (&rmi->relay_list_sem);
-		debug_printf ("relaylib_accept_thread_main released &rmi->relay_list_sem\n");
                 if (prefs->max_connections > 0 && num_connected >= (unsigned long) prefs->max_connections) {
                     continue;
                 }
@@ -590,29 +509,41 @@ relaylib_accept_thread_main (void *arg)
                     // Socket is new and its buffer had better have 
 		    // room to hold the entire HTTP header!
                     good = FALSE;
-                    if (header_receive (newsock, &client_wants_metadata) == 0) {
+                    if (header_receive (newsock, &icy_metadata) == 0 && rmi->cbuf2.buf != NULL) {
 			int header_len;
 			make_nonblocking (newsock);
-			client_http_header = client_relay_header_generate (rmi, client_wants_metadata);
+			client_http_header = client_relay_header_generate (rmi, icy_metadata);
 			header_len = strlen (client_http_header);
 			ret = send (newsock, client_http_header, strlen(client_http_header), 0);
 			debug_printf ("Relay: Sent response header to client %d (%d)\n", 
 			    ret, header_len);
 			client_relay_header_release (client_http_header);
 			if (ret == header_len) {
-			    new_client = relay_client_add (rmi, newsock,
-							   client_wants_metadata);
-			    if (new_client != 0) {
-				good = TRUE;
-			    }
+                            newhostsock = malloc (sizeof(RELAY_LIST));
+                            if (newhostsock != NULL) {
+                                // Add new client to list (headfirst)
+                                threadlib_waitfor_sem (&rmi->relay_list_sem);
+                                newhostsock->m_is_new = 1;
+                                newhostsock->m_sock = newsock;
+                                newhostsock->m_next = rmi->relay_list;
+				if (have_metadata) {
+                                    newhostsock->m_icy_metadata = icy_metadata;
+				} else {
+                                    newhostsock->m_icy_metadata = 0;
+				}
+
+                                rmi->relay_list = newhostsock;
+                                rmi->relay_list_len++;
+                                threadlib_signal_sem (&rmi->relay_list_sem);
+                                good = TRUE;
+                            }
                         }
                     }
 
                     if (!good)
                     {
                         closesocket (newsock);
-                        debug_printf ("Relay: Client %d disconnected (Unable to receive HTTP header)\n", newsock);
-                        //debug_printf ("Relay: Client %d disconnected (Unable to receive HTTP header) or cbuf2.buf is NULL\n", newsock);
+                        debug_printf ("Relay: Client %d disconnected (Unable to receive HTTP header) or cbuf2.buf is NULL\n", newsock);
 			//if (rmi->cbuf2.buf == NULL) {
 			  //  debug_printf ("In fact, cbuf2.buf is NULL\n");
 			//}
@@ -632,131 +563,45 @@ relaylib_accept_thread_main (void *arg)
     rli->m_running = FALSE;
 }
 
-/* Send buffer is empty, so add more data to it */
-static error_code
-relaylib_fill_client_buffer_ogg (Cbuf3 *cbuf3, Relay_client *relay)    
-{
-    debug_printf ("relaylib_fill_client_buffer_ogg: %d\n", 
-		  relay->m_header_buf_ptr);
-    if (relay->m_header_buf_ptr) {
-	u_long remaining = relay->m_header_buf_len - relay->m_header_buf_off;
-	debug_printf ("relaylib_fill_client_buffer_ogg: %d %d %d\n",
-		      relay->m_header_buf_len, relay->m_header_buf_off,
-		      remaining);
-	if (remaining > relay->m_buffer_size) {
-	    debug_printf ("memcpy: %p, %p[%d], %d\n",
-			  relay->m_buffer, 
-			  relay->m_header_buf_ptr,
-			  relay->m_header_buf_off,
-			  relay->m_buffer_size);
-	    memcpy (relay->m_buffer, 
-		    &relay->m_header_buf_ptr[relay->m_header_buf_off], 
-		    relay->m_buffer_size);
-	    relay->m_header_buf_off += relay->m_buffer_size;
-	    relay->m_left_to_send = relay->m_buffer_size;
-	} else {
-	    memcpy (relay->m_buffer, 
-		    &relay->m_header_buf_ptr[relay->m_header_buf_off], 
-		    remaining);
-	    relay->m_header_buf_ptr = 0;
-	    relay->m_header_buf_off = 0;
-	    relay->m_header_buf_len = 0;
-	    relay->m_left_to_send = remaining;
-	}
-    } else {
-	error_code rc = cbuf3_extract_relay (cbuf3, relay);
-	return rc;
-#if defined (commentout)
-	u_long frag1, frag2;
-	u_long relay_idx, remaining;
-
-	threadlib_waitfor_sem (&cbuf2->cbuf_sem);
-	relay_idx = cbuf2_add (cbuf2, cbuf2->base_idx, ptr->m_cbuf_offset);
-	cbuf2_get_used_fragments (cbuf2, &frag1, &frag2);
-	if (ptr->m_cbuf_offset < frag1) {
-	    remaining = frag1 - ptr->m_cbuf_offset;
-	} else {
-	    remaining = cbuf2->item_count - ptr->m_cbuf_offset;
-	}
-	debug_printf ("%p p=%d/t=%d (f1=%d,f2=%d) [r=%d/bs=%d]\n", 
-		      ptr,
-		      ptr->m_cbuf_offset, cbuf2->item_count,
-		      frag1, frag2,
-		      remaining, ptr->m_buffer_size);
-	if (remaining == 0) {
-	    threadlib_signal_sem (&cbuf2->cbuf_sem);
-	    return SR_ERROR_BUFFER_EMPTY;
-	}
-	if (remaining > ptr->m_buffer_size) {
-	    memcpy (ptr->m_buffer, &cbuf2->buf[relay_idx], ptr->m_buffer_size);
-	    ptr->m_left_to_send = ptr->m_buffer_size;
-	    ptr->m_cbuf_offset += ptr->m_buffer_size;
-	} else {
-	    memcpy (ptr->m_buffer, &cbuf2->buf[relay_idx], remaining);
-	    ptr->m_left_to_send = remaining;
-	    ptr->m_cbuf_offset += remaining;
-	}
-	threadlib_signal_sem (&cbuf2->cbuf_sem);
-#endif
-    }
-    return SR_SUCCESS;
-}
-
-/* Send buffer is empty, so add more data to it */
-static error_code
-relaylib_fill_client_buffer (RIP_MANAGER_INFO* rmi, Relay_client *relay_client)
-{
-    Cbuf3 *cbuf3 = &rmi->cbuf3;
-    if (cbuf3->content_type == CONTENT_TYPE_OGG) {
-	return relaylib_fill_client_buffer_ogg (cbuf3, relay_client);
-	//return cbuf3_extract_relay_ogg (cbuf3, relay_client);
-    } else {
-	//return cbuf2_extract_relay_mp3 (cbuf2, ptr);
-    }
-    return SR_SUCCESS;
-}
-
-/* Sock is ready to receive, so send data to relay client */
-static void
-relaylib_send (RIP_MANAGER_INFO* rmi, Relay_client *relay_client)
+/* Sock is ready to receive, so send it from cbuf to relay */
+static BOOL 
+send_to_relay (RIP_MANAGER_INFO* rmi, RELAY_LIST* ptr)
 {
     int ret;
     int err_errno;
+    BOOL good = TRUE;
     int done = 0;
-    Cbuf3 *cbuf3 = &rmi->cbuf3;
 
-    /* If the relay client connects too soon, it might not yet 
-       be initialized.  In that case, initialize it here. */
-    if (relay_client->m_cbuf_ptr.node == 0) {
-	error_code rc;
-	rc = cbuf3_initialize_relay_client_ptr (cbuf3, relay_client, 
-						BURST_AMOUNT);
-	if (rc != SR_SUCCESS) {
-	    return;
-	}
+    /* For new clients, initialize cbuf pointers */
+    if (ptr->m_is_new) {
+	int burst_amount = 32*1024;
+	//	int burst_amount = 64*1024;
+	//	int burst_amount = 128*1024;
+	ptr->m_offset = 0;
+	ptr->m_left_to_send = 0;
+
+	cbuf2_init_relay_entry (&rmi->cbuf2, ptr, burst_amount);
+	
+	ptr->m_is_new = 0;
     }
 
     while (!done) {
 	/* If our private buffer is empty, copy some from the cbuf */
-	if (!relay_client->m_left_to_send) {
+	if (!ptr->m_left_to_send) {
 	    error_code rc;
-	    relay_client->m_offset = 0;
-	    rc = relaylib_fill_client_buffer (rmi, relay_client);
+	    ptr->m_offset = 0;
+	    rc = cbuf2_extract_relay (&rmi->cbuf2, ptr);
 	    
 	    if (rc == SR_ERROR_BUFFER_EMPTY) {
-		debug_printf ("Buffer is empty\n");
 		break;
 	    }
 	}
 	/* Send from the private buffer to the client */
-	debug_printf ("Relay: Sending %d bytes to client %d\n", 
-		      relay_client->m_left_to_send,
-		      relay_client->m_sock);
-	ret = send (relay_client->m_sock, 
-		    relay_client->m_buffer+relay_client->m_offset, 
-		    relay_client->m_left_to_send, 0);
-	debug_printf ("Relay: Client %d returned %d\n", 
-		      relay_client->m_sock, ret);
+	debug_printf ("Relay: Sending Client %d to the client\n", 
+		      ptr->m_left_to_send );
+	ret = send (ptr->m_sock, ptr->m_buffer+ptr->m_offset, 
+		    ptr->m_left_to_send, 0);
+	debug_printf ("Relay: Sending to Client returned %d\n", ret );
 	if (ret == SOCKET_ERROR) {
 	    /* Sometimes windows gives me an errno of 0
 	       Sometimes windows gives me an errno of 183 
@@ -773,73 +618,87 @@ relaylib_send (RIP_MANAGER_INFO* rmi, Relay_client *relay_client)
 #endif
 	    } else {
 		debug_printf ("Relay: socket error is %d\n",errno);
+		good = FALSE;
 	    }
 	    done = 1;
 	} else { 
 	    // Send was successful
-	    relay_client->m_offset += ret;
-	    relay_client->m_left_to_send -= ret;
-	    if (relay_client->m_left_to_send < 0) {
+	    ptr->m_offset += ret;
+	    ptr->m_left_to_send -= ret;
+	    if (ptr->m_left_to_send < 0) {
 		/* GCS: can this ever happen??? */
-		debug_printf ("relay_client->m_left_to_send < 0\n");
-		relay_client->m_left_to_send = 0;
+		debug_printf ("ptr->m_left_to_send < 0\n");
+		ptr->m_left_to_send = 0;
 		done = 1;
 	    }
 	}
     }
+    return good;
 }
 
-/* rmi->relay_list_sem must be locked before calling this function */
 void 
-relaylib_disconnect (RIP_MANAGER_INFO* rmi, GList *node)
+relaylib_disconnect (RIP_MANAGER_INFO* rmi, RELAY_LIST* prev, RELAY_LIST* ptr)
 {
-    Relay_client *relay_client = (Relay_client*) node->data;
+    RELAY_LIST* next = ptr->m_next;
+    int sock = ptr->m_sock;
 
-    /* Close connection */
-    debug_printf ("Trying to close socket.\n");
-    debug_printf ("Trying to close socket (%d).\n", relay_client->m_sock);
-    closesocket (relay_client->m_sock);
-
-    /* Delete client from list without affecting list order */
-    debug_printf ("Trying to delete node from queue\n");
-    g_queue_delete_link (rmi->relay_list, node);
-
-    /* Free memory */
-    debug_printf ("Trying free relay_client\n");
-    relaylib_free_relay_client (relay_client, 0);
-
-    debug_printf ("Disconnect complete\n");
+    closesocket (sock);
+                                   
+    // Carefully delete this client from list without 
+    // affecting list order
+    if (prev != NULL) {
+	prev->m_next = next;
+    } else {
+	rmi->relay_list = next;
+    }
+    if (ptr->m_buffer != NULL) {
+	free (ptr->m_buffer);
+        ptr->m_buffer = NULL;
+    }
+    free (ptr);
+    rmi->relay_list_len --;
 }
 
-/* This is the thread function that sends data to relay clients */
-static void 
-relaylib_send_thread_main (void* arg)
+void 
+thread_send (void* arg)
 {
+    RELAY_LIST* prev;
+    RELAY_LIST* ptr;
+    RELAY_LIST* next;
+    int sock;
+    BOOL good;
+    error_code err = SR_SUCCESS;
     RIP_MANAGER_INFO* rmi = (RIP_MANAGER_INFO*) arg;
     RELAYLIB_INFO* rli = &rmi->relaylib_info;
-    GList *node;
 
     while (rli->m_running) {
-	debug_printf ("relaylib_send_thread_main is waiting for &rmi->relay_list_sem\n");
 	threadlib_waitfor_sem (&rmi->relay_list_sem);
-	debug_printf ("relaylib_send_thread_main got &rmi->relay_list_sem\n");
+	ptr = rmi->relay_list;
+	if (ptr != NULL) {
+	    prev = NULL;
+	    while (ptr != NULL) {
+		sock = ptr->m_sock;
+		next = ptr->m_next;
 
-	node = rmi->relay_list->head;
-	while (node) {
-	    Relay_client *relay_client = (Relay_client*) node->data;
-	    int sock = relay_client->m_sock;
-	    node = node->next;
-	    
-	    if (swallow_receive (sock) != 0) {
-		debug_printf ("Relay: Client %d disconnected (%s)\n", 
-			      sock, strerror(errno));
-		relaylib_disconnect (rmi, node);
+		if (swallow_receive(sock) != 0) {
+		    good = FALSE;
+		} else {
+		    good = send_to_relay (rmi, ptr);
+		}
+	       
+		if (!good) {
+		    debug_printf ("Relay: Client %d disconnected (%s)\n", 
+				  sock, strerror(errno));
+		    relaylib_disconnect (rmi, prev, ptr);
+		} else if (ptr != NULL) {
+		    prev = ptr;
+		}
+		ptr = next;
 	    }
-	    relaylib_send (rmi, relay_client);
+	} else {
+	    err = SR_ERROR_HOST_NOT_CONNECTED;
 	}
-
 	threadlib_signal_sem (&rmi->relay_list_sem);
-	debug_printf ("relaylib_send_thread_main released &rmi->relay_list_sem\n");
 	Sleep (50);
     }
     rli->m_running_send = FALSE;

@@ -20,7 +20,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <errno.h>
-#include "sr_compat.h"
+#include "compat.h"
 #include "filelib.h"
 #include "mchar.h"
 #include "debug.h"
@@ -28,7 +28,6 @@
 #include <sys/types.h>
 #include "glib.h"
 #include "glib/gstdio.h"
-#include "rip_manager.h"
 #include "uce_dirent.h"
 
 #define TEMP_STR_LEN	(SR_MAX_PATH*2)
@@ -114,6 +113,7 @@ filelib_init (RIP_MANAGER_INFO* rmi,
     gchar tmp_output_pattern[SR_MAX_PATH];
     gchar tmp_showfile_pattern[SR_MAX_PATH];
 
+    fli->m_file = INVALID_FHANDLE;
     fli->m_show_file = INVALID_FHANDLE;
     fli->m_cue_file = INVALID_FHANDLE;
     fli->m_count = do_count ? count_start : -1;
@@ -217,8 +217,7 @@ filelib_init (RIP_MANAGER_INFO* rmi,
     }
 
     /* Compute the amount of remaining path length for the filenames */
-    fli->m_max_filename_length = SR_MAX_PATH 
-	    - mstrlen (fli->m_incomplete_directory);
+    fli->m_max_filename_length = SR_MAX_PATH - mstrlen(fli->m_incomplete_directory);
 
     /* Get directory and pattern of showfile */
     if (do_show_file) {
@@ -246,7 +245,7 @@ filelib_init (RIP_MANAGER_INFO* rmi,
 }
 
 error_code
-filelib_start (RIP_MANAGER_INFO* rmi, Writer *writer, TRACK_INFO* ti)
+filelib_start (RIP_MANAGER_INFO* rmi, TRACK_INFO* ti)
 {
     FILELIB_INFO* fli = &rmi->filelib_info;
     gchar newfile[TEMP_STR_LEN];
@@ -255,7 +254,7 @@ filelib_start (RIP_MANAGER_INFO* rmi, Writer *writer, TRACK_INFO* ti)
 
     if (!fli->m_do_individual_tracks) return SR_SUCCESS;
 
-    debug_printf ("filelib_start\n");
+    close_file (&fli->m_file);
 
     /* Compose and trim filename (not including directory) */
     msnprintf (fnbase1, TEMP_STR_LEN, m_S m_(" - ") m_S, 
@@ -268,7 +267,7 @@ filelib_start (RIP_MANAGER_INFO* rmi, Writer *writer, TRACK_INFO* ti)
 				  fnbase, fli->m_extension);
     }
     mstrcpy (fli->m_incomplete_filename, newfile);
-    return filelib_open_for_write (rmi, &writer->m_file, newfile);
+    return filelib_open_for_write (rmi, &fli->m_file, newfile);
 }
 
 error_code
@@ -299,10 +298,10 @@ filelib_write_cue (RIP_MANAGER_INFO* rmi, TRACK_INFO* ti, int secs)
 }
 
 error_code
-filelib_write_track (Writer *writer, char *buf, u_long size)
+filelib_write_track (RIP_MANAGER_INFO* rmi, char *buf, u_long size)
 {
-    debug_printf ("filelib_write_track %p %u\n", buf, size);
-    return filelib_write (writer->m_file, buf, size);
+    FILELIB_INFO* fli = &rmi->filelib_info;
+    return filelib_write (fli->m_file, buf, size);
 }
 
 error_code
@@ -322,29 +321,27 @@ filelib_write_show (RIP_MANAGER_INFO* rmi, char *buf, u_long size)
     return rc;
 }
 
-/** Move file from incomplete to complete directory. */
+// Moves the file from incomplete to complete directory
+// fullpath is an output parameter
 error_code
-filelib_rename_to_complete (
-    RIP_MANAGER_INFO* rmi,
-    Writer *writer)
+filelib_end (RIP_MANAGER_INFO* rmi,
+	     TRACK_INFO* ti,
+	     enum OverwriteOpt overwrite,
+	     BOOL truncate_dup,
+	     gchar *fullpath)
 {
     FILELIB_INFO* fli = &rmi->filelib_info;
     BOOL ok_to_write = TRUE;
     gchar new_path[TEMP_STR_LEN];
     gchar* new_fnbase;
     gchar* new_dir;
-    enum OverwriteOpt overwrite = rmi->prefs->overwrite;
-    BOOL truncate_dup = GET_TRUNCATE_DUPS(rmi->prefs->flags);
-    /* GCS FIX: It used to be that fullpath was returned to 
-       the caller through the "streamripper API".  Is this necessary?
-       If so, the methodology should be documented. */
-    gchar *fullpath = 0;
 
     if (!fli->m_do_individual_tracks) return SR_SUCCESS;
 
+    close_file (&fli->m_file);
+
     /* Construct filename for completed file */
-    parse_and_subst_pat (rmi, new_path, &writer->m_ti, 
-			 fli->m_output_directory, 
+    parse_and_subst_pat (rmi, new_path, ti, fli->m_output_directory, 
 			 fli->m_output_pattern, fli->m_extension);
 
     /* Build up the output directory */
@@ -365,8 +362,7 @@ filelib_rename_to_complete (
 	break;
     case OVERWRITE_LARGER:
 	/* Smart overwriting -- only overwrite if new file is bigger */
-	ok_to_write = new_file_is_better (rmi, new_path, 
-					  fli->m_incomplete_filename);
+	ok_to_write = new_file_is_better (rmi, new_path, fli->m_incomplete_filename);
 	break;
     case OVERWRITE_VERSION:
     default:
@@ -379,8 +375,6 @@ filelib_rename_to_complete (
 	g_free (new_fnbase);
 	ok_to_write = TRUE;
     }
-
-    debug_printf ("filelib_end: new_path = %s\n", new_path);
 
     if (ok_to_write) {
 	if (file_exists (rmi, new_path)) {
@@ -398,21 +392,6 @@ filelib_rename_to_complete (
     }
     if (fli->m_count != -1)
 	fli->m_count++;
-    return SR_SUCCESS;
-}
-
-error_code
-filelib_close (
-    RIP_MANAGER_INFO* rmi,
-    Writer *writer
-)
-{
-    FILELIB_INFO* fli = &rmi->filelib_info;
-
-    if (!fli->m_do_individual_tracks) {
-	return SR_SUCCESS;
-    }
-    close_file (&writer->m_file);
     return SR_SUCCESS;
 }
 
@@ -776,8 +755,7 @@ static void
 close_files (RIP_MANAGER_INFO* rmi)
 {
     FILELIB_INFO* fli = &rmi->filelib_info;
-    /* GCS FIX: Need to close writers */
-    //    close_file (&fli->m_file);
+    close_file (&fli->m_file);
     close_file (&fli->m_show_file);
     close_file (&fli->m_cue_file);
 }
@@ -1117,17 +1095,16 @@ filelib_write (FHANDLE fp, char *buf, u_long size)
     {
 	BOOL rc;
 	DWORD bytes_written = 0;
-	rc = WriteFile (fp, buf, size, &bytes_written, NULL);
+	rc = WriteFile(fp, buf, size, &bytes_written, NULL);
 	if (rc == 0) {
-	    debug_print_error ();
-	    debug_printf ("filelib_write: WriteFile rc = 0\n");
-	    debug_printf ("size = %d, bytes_written = %d\n", 
-			 size, bytes_written);
+	    debug_print_error();
+	    debug_printf("filelib_write: WriteFile rc = 0\n");
+	    debug_printf("size = %d, bytes_written = %d\n", size, bytes_written);
 	    return SR_ERROR_CANT_WRITE_TO_FILE;
 	}
     }
 #else
-    if (write (fp, buf, size) == -1)
+    if (write(fp, buf, size) == -1)
 	return SR_ERROR_CANT_WRITE_TO_FILE;
 #endif
 

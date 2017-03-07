@@ -347,7 +347,7 @@ prefs_get_stream_prefs (STREAM_PREFS* prefs, char* label)
 {
     /* Be careful here.  The label might be prefs->url, so we don't 
        want to overwrite it while we are loading. */
-    gchar* label_copy = g_strdup (label);
+    gchar* label_copy = strdup (label);
     gchar* group = 0;
 
     if (strcmp (label, "stream defaults")) {
@@ -493,8 +493,6 @@ static void
 prefs_get_stream_defaults (STREAM_PREFS* prefs)
 {
     debug_printf ("- set_rip_manager_options_defaults -\n");
-
-    strcpy (prefs->label, "stream defaults");
     //    prefs->url[0] = 0;
     prefs->proxyurl[0] = 0;
 

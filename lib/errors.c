@@ -37,7 +37,7 @@
 #include "ripstream.h"
 #include "threadlib.h"
 #include "debug.h"
-#include "sr_compat.h"
+#include "compat.h"
 #include "parse.h"
 
 /******************************************************************************
@@ -117,7 +117,7 @@ errors_init (void)
     SET_ERR_STR("SR_ERROR_SELECT_FAILED",                       0x3c);
     SET_ERR_STR("SR_ERROR_RESERVED_WINDOW_EMPTY",               0x3d);
     SET_ERR_STR("SR_ERROR_CANT_BIND_ON_INTERFACE",              0x3e);
-    SET_ERR_STR("SR_ERROR_NO_DATA_FOR_RELAY",                   0x3f);
+    SET_ERR_STR("SR_ERROR_NO_OGG_PAGES_FOR_RELAY",              0x3f);
     SET_ERR_STR("SR_ERROR_CANT_PARSE_PLS",                      0x40);
     SET_ERR_STR("SR_ERROR_CANT_PARSE_M3U",                      0x41);
     SET_ERR_STR("SR_ERROR_CANT_CREATE_SOCKET",                  0x42);

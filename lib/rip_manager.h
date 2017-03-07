@@ -21,15 +21,35 @@
 #include "prefs.h"
 #include "srtypes.h"
 #include "errors.h"
-#include "sr_compat.h"
+#include "compat.h"
 
-#define SRVERSION	"1.65.0-alpha"
+#define SRVERSION	"1.64.6"
 
 #if defined (WIN32)
 #define SRPLATFORM      "windows"
 #else
 #define SRPLATFORM      "unix"
 #endif
+
+// Messages for status_callback hook in rip_manager_init()
+// used for notifing to client whats going on *DO NOT* call 
+// rip_mananger_start or rip_mananger_stop from
+// these functions!!! it will cause a deadlock
+#define RM_UPDATE	0x01		// returns a pointer RIP_MANAGER_INFO struct
+#define RM_ERROR	0x02		// returns the error code
+#define RM_DONE		0x03		// NULL
+#define RM_STARTED	0x04		// NULL
+#define RM_NEW_TRACK	0x05		// Name of the new track
+#define RM_TRACK_DONE	0x06		// pull path of the track completed
+// RM_OUTPUT_DIR is now OBSOLETE
+#define RM_OUTPUT_DIR	0x07		// Full path of the output directory
+
+
+// The following are the possible status values for RIP_MANAGER_INFO
+#define RM_STATUS_BUFFERING		0x01
+#define RM_STATUS_RIPPING		0x02
+#define RM_STATUS_RECONNECTING		0x03
+
 
 // Rip manager flags options
 #define OPT_AUTO_RECONNECT	0x00000001	// reconnect automatically if dropped
@@ -79,9 +99,11 @@ void rip_manager_stop (RIP_MANAGER_INFO *rmi);
 void rip_manager_cleanup (void);
 error_code rip_manager_start_track (RIP_MANAGER_INFO *rmi, TRACK_INFO* ti);
 error_code rip_manager_end_track (RIP_MANAGER_INFO* rmi, TRACK_INFO* ti);
-//error_code rip_manager_put_data (RIP_MANAGER_INFO *rmi, char *buf, int size);
-//void rip_manager_post_status (RIP_MANAGER_INFO* rmi, int status);
+error_code rip_manager_put_data (RIP_MANAGER_INFO *rmi, char *buf, int size);
 
+char* client_relay_header_generate (RIP_MANAGER_INFO* rmi, 
+				    int icy_meta_support);
+void client_relay_header_release (char *ch);
 
 const char*
 overwrite_opt_to_string (enum OverwriteOpt oo);

@@ -22,6 +22,21 @@
 #include "list.h"
 #include "relaylib.h"
 
+/* Each metadata within the cbuf gets this struct */
+typedef struct METADATA_LIST_struct METADATA_LIST;
+struct METADATA_LIST_struct
+{
+    unsigned long m_chunk;
+    /* m_composed_metadata includes 1 byte for size*16 */
+    char m_composed_metadata[MAX_METADATA_LEN+1];
+    LIST m_list;
+};
+
+#define OGG_PAGE_BOS        0x01
+#define OGG_PAGE_EOS        0x02
+#define OGG_PAGE_2          0x04
+
+
 /*****************************************************************************
  * Global variables
  *****************************************************************************/
@@ -66,6 +81,5 @@ error_code cbuf2_extract_relay (CBUF2 *cbuf2, char *data, u_long *pos,
 #endif
 error_code cbuf2_extract_relay (CBUF2 *cbuf2, RELAY_LIST* ptr);
 error_code cbuf2_advance_ogg (RIP_MANAGER_INFO* rmi, CBUF2 *cbuf2, int requested_free_size);
-u_long cbuf2_add (CBUF2 *cbuf2, u_long pos, u_long len);
 
 #endif
