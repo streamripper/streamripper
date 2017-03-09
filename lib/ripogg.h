@@ -18,6 +18,7 @@
 #define __RIP_OGG_H__
 
 #include "list.h"
+#include "srtypes.h"
 
 void rip_ogg_init(RIP_MANAGER_INFO *rmi);
 void rip_ogg_get_current_header(RIP_MANAGER_INFO *rmi, char **ptr, int *len);
