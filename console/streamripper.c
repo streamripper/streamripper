@@ -119,6 +119,7 @@ main(int argc, char *argv[]) {
 
 	rip_manager_stop(rmi);
 	rip_manager_cleanup();
+	free(rmi);
 
 	return 0;
 }
