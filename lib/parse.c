@@ -166,6 +166,7 @@ copy_rule_result(mchar *dest, GMatchInfo *match_info, int idx) {
 	if (idx > 0 && idx <= MAX_SUBMATCHES) {
 		mstrncpy(dest, match, MAX_METADATA_LEN);
 	}
+	g_free(match);
 }
 #else
 static void
