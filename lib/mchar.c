@@ -309,12 +309,12 @@ convert_string_with_replacement(
 				/* A successful conversion. */
 				debug_printf("Successful conversion: %d bytes read\n", br);
 				gmem_concat(output_string, *output_bytes, os, bw);
-				g_free(os);
 				cur += br;
 				bytes_to_convert = input_bytes - cur;
 				*output_bytes += bw;
 				need_repl = 1;
 			}
+			g_free(os);
 		}
 
 		/* drop_byte will be true if a conversion failure happened.
