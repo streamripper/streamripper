@@ -85,6 +85,7 @@
 #define DIRENT_H
 #define DIRENT_H_INCLUDED
 
+/* clang-format off */
 /* find out platform */
 #if defined(MSDOS)                             /* MS-DOS */
 #elif defined(__MSDOS__)                       /* Turbo C/Borland */
@@ -311,6 +312,7 @@ static void rewinddir (DIR *dirp);
 # define _dos_findnext(dest) findnext(dest)
 # define _dos_findfirst(name,flags,dest) findfirst(name,dest,flags)
 #endif
+/* clang-format on */
 
 static int _initdir (DIR *p);
 static const char *_getdirname (const struct dirent *dp);

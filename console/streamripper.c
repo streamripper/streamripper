@@ -273,6 +273,7 @@ rip_callback (RIP_MANAGER_INFO* rmi, int message, void *data)
 static void
 print_usage (FILE* stream)
 {
+	/* clang-format off */
     fprintf(stream, "Usage: streamripper URL [OPTIONS]\n");
     fprintf(stream, "Opts: -h             - Print this listing\n");
     fprintf(stream, "      -v             - Print version info and quit\n");
@@ -320,6 +321,7 @@ print_usage (FILE* stream)
     fprintf(stream, "      --codeset-id3=codeset        - Specify codeset for id3 tags\n");
     fprintf(stream, "      --codeset-metadata=codeset   - Specify codeset for metadata\n");
     fprintf(stream, "      --codeset-relay=codeset      - Specify codeset for the relay stream\n");
+	/* clang-format on */
 }
 
 /* 

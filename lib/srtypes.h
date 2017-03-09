@@ -70,6 +70,7 @@ typedef unsigned int uint32_t;
 #include <ogg/ogg.h>
 #endif
 
+/* clang-format off */
 #define BOOL	int
 #ifndef TRUE
 #define TRUE	1
@@ -129,6 +130,7 @@ typedef unsigned short u_short;
 #define CONTENT_TYPE_PLS		6
 #define CONTENT_TYPE_M3U		7
 #define CONTENT_TYPE_UNKNOWN		99
+/* clang-format on */
 
 /* 
  * IO_DATA_INPUT is a interface for socket input data, it has one 

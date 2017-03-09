@@ -27,6 +27,7 @@
 /*****************************************************************************
  * Private global variables
  *****************************************************************************/
+/* clang-format off */
 #define MAX_RULE_SIZE                2048
 #define MAX_SUBMATCHES                 24
 
@@ -77,6 +78,7 @@ static Parse_Rule m_default_rule_list[] = {
       ""
     }
 };
+// clang-format on
 
 // static Parse_Rule* m_global_rule_list = m_default_rule_list;
 

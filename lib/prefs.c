@@ -34,6 +34,7 @@
 #define DEFAULT_USER_AGENT ("streamripper/" SRVERSION)
 static GKeyFile *m_key_file = NULL;
 
+/* clang-format off */
 enum PrefsVersion {
     PREFS_VERSION_1_63_BETA_2,
     PREFS_VERSION_1_63_BETA_8,
@@ -52,6 +53,7 @@ static const char* prefs_version_strings[] = {
 			    Change splitpoint padding from 300 to 0. */
     0
 };
+/* clang-format on */
 
 /* Preference file versions */
 #define PREFS_VERSION_CURRENT "1.64.5"

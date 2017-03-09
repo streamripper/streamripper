@@ -23,6 +23,7 @@
 #include "errors.h"
 #include "compat.h"
 
+// clang-format off
 #define SRVERSION	"1.64.6"
 
 #if defined (WIN32)
@@ -87,6 +88,7 @@
 #define GET_EXTERNAL_CMD(flags)			(OPT_FLAG_ISSET(flags, OPT_EXTERNAL_CMD))
 #define GET_ADD_ID3V1(flags)			(OPT_FLAG_ISSET(flags, OPT_ADD_ID3V1))
 #define GET_ADD_ID3V2(flags)			(OPT_FLAG_ISSET(flags, OPT_ADD_ID3V2))
+// clang-format on
 
 /* Public functions */
 char *rip_manager_get_error_str(int code);

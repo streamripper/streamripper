@@ -52,6 +52,7 @@ static char m_error_str[NUM_ERROR_CODES][MAX_ERROR_STR];
 void
 errors_init (void)
 {
+	/* clang-format off */
     SET_ERR_STR("SR_SUCCESS",					0x00);
     SET_ERR_STR("SR_ERROR_CANT_FIND_TRACK_SEPERATION",		0x01);
     SET_ERR_STR("SR_ERROR_DECODE_FAILURE",			0x02);
@@ -122,6 +123,7 @@ errors_init (void)
     SET_ERR_STR("SR_ERROR_CANT_PARSE_M3U",                      0x41);
     SET_ERR_STR("SR_ERROR_CANT_CREATE_SOCKET",                  0x42);
     SET_ERR_STR("SR_ERROR_CREATE_PIPE_FAILED",                  0x43);
+	/* clang-format on */
 }
 
 char*

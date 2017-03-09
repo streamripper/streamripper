@@ -11,6 +11,7 @@ typedef int error_code;
 // JCBUG -- no way to make custom error strings for http errors, also errors
 // are not organized at all, should have space to insert in places.
 //
+// clang-format off
 /* ************** IMPORTANT IF YOU ADD ERROR CODES!!!! ***********************/
 #define NUM_ERROR_CODES					((0x44)+1)
 /* ************** IMPORTANT IF YOU ADD ERROR CODES!!!! ***********************/
@@ -84,6 +85,7 @@ typedef int error_code;
 #define SR_ERROR_CANT_CREATE_SOCKET	        - 0x42
 #define SR_ERROR_CREATE_PIPE_FAILED	        - 0x43
 #define SR_ERROR_ABORT_PIPE_SIGNALLED           - 0x44  // Not an error
+// clang-format on
 
 typedef struct ERROR_INFOst
 {
