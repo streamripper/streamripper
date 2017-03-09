@@ -256,8 +256,8 @@ rip_manager_start_track(RIP_MANAGER_INFO *rmi, TRACK_INFO *ti) {
  */
 error_code
 rip_manager_end_track(RIP_MANAGER_INFO *rmi, TRACK_INFO *ti) {
-	mchar mfullpath[SR_MAX_PATH];
-	char fullpath[SR_MAX_PATH];
+	mchar mfullpath[SR_MAX_PATH] = {0};
+	char fullpath[SR_MAX_PATH] = {0};
 
 	if (rmi->write_data) {
 		filelib_end(
