@@ -639,6 +639,7 @@ parse_metadata(RIP_MANAGER_INFO *rmi, TRACK_INFO *ti) {
 			g_free(tmp);
 			g_match_info_free(match_info);
 			mstrncpy(query_string, subst_string, MAX_TRACK_LEN);
+			g_free(subst_string);
 #else
 			mchar subst_string[MAX_TRACK_LEN];
 			int used, left;
