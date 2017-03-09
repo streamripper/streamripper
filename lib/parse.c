@@ -544,6 +544,9 @@ parse_metadata(RIP_MANAGER_INFO *rmi, TRACK_INFO *ti) {
 				rc = g_regex_match(rulep->reg, query_string, 0, &match_info);
 				if (rc == 0) {
 					/* Didn't match rule. */
+					/* must free it regardless whether regular expression
+					 * actually matched */
+					g_match_info_free(match_info);
 					continue;
 				}
 				nmatch = g_match_info_get_match_count(match_info);
