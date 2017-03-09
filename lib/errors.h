@@ -87,14 +87,12 @@ typedef int error_code;
 #define SR_ERROR_ABORT_PIPE_SIGNALLED           - 0x44  // Not an error
 // clang-format on
 
-typedef struct ERROR_INFOst
-{
-    char error_str[MAX_ERROR_STR];
-    error_code error_code;
+typedef struct ERROR_INFOst {
+	char error_str[MAX_ERROR_STR];
+	error_code error_code;
 } ERROR_INFO;
 
-
-void errors_init (void);
-char* errors_get_string (error_code code);
+void errors_init(void);
+char *errors_get_string(error_code code);
 
 #endif

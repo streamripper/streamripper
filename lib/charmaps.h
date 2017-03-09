@@ -42,18 +42,12 @@ static const unsigned short mapping_iso_8859_2[256] = {
 };
 
 static struct {
-  const char *name;
-  const unsigned short *map;
-  struct charset *charset;
-} maps[] = {
-  { "ISO-8859-2", mapping_iso_8859_2, 0 },
-  { 0, 0, 0 }
-};
+	const char *name;
+	const unsigned short *map;
+	struct charset *charset;
+} maps[] = {{"ISO-8859-2", mapping_iso_8859_2, 0}, {0, 0, 0}};
 
 static const struct {
-  const char *bad;
-  const char *good;
-} names[] = {
-  { "ANSI_X3.4-1968", "us-ascii" },
-  { 0, 0 }
-};
+	const char *bad;
+	const char *good;
+} names[] = {{"ANSI_X3.4-1968", "us-ascii"}, {0, 0}};

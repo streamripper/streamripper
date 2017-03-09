@@ -17,11 +17,11 @@
 #ifndef __RIP_MANANGER_H__
 #define __RIP_MANANGER_H__
 
+#include "compat.h"
+#include "errors.h"
 #include "external.h"
 #include "prefs.h"
 #include "srtypes.h"
-#include "errors.h"
-#include "compat.h"
 
 // clang-format off
 #define SRVERSION	"1.64.6"
@@ -92,24 +92,24 @@
 
 /* Public functions */
 char *rip_manager_get_error_str(int code);
-//u_short rip_mananger_get_relay_port();	
-void set_rip_manager_options_defaults (STREAM_PREFS *m_opt);
-void rip_manager_init (void);
-error_code rip_manager_start (RIP_MANAGER_INFO **rmi, STREAM_PREFS *prefs,
-			      RIP_MANAGER_CALLBACK status_callback);
-void rip_manager_stop (RIP_MANAGER_INFO *rmi);
-void rip_manager_cleanup (void);
-error_code rip_manager_start_track (RIP_MANAGER_INFO *rmi, TRACK_INFO* ti);
-error_code rip_manager_end_track (RIP_MANAGER_INFO* rmi, TRACK_INFO* ti);
-error_code rip_manager_put_data (RIP_MANAGER_INFO *rmi, char *buf, int size);
+// u_short rip_mananger_get_relay_port();
+void set_rip_manager_options_defaults(STREAM_PREFS *m_opt);
+void rip_manager_init(void);
+error_code rip_manager_start(
+    RIP_MANAGER_INFO **rmi,
+    STREAM_PREFS *prefs,
+    RIP_MANAGER_CALLBACK status_callback);
+void rip_manager_stop(RIP_MANAGER_INFO *rmi);
+void rip_manager_cleanup(void);
+error_code rip_manager_start_track(RIP_MANAGER_INFO *rmi, TRACK_INFO *ti);
+error_code rip_manager_end_track(RIP_MANAGER_INFO *rmi, TRACK_INFO *ti);
+error_code rip_manager_put_data(RIP_MANAGER_INFO *rmi, char *buf, int size);
 
-char* client_relay_header_generate (RIP_MANAGER_INFO* rmi, 
-				    int icy_meta_support);
-void client_relay_header_release (char *ch);
+char *client_relay_header_generate(RIP_MANAGER_INFO *rmi, int icy_meta_support);
+void client_relay_header_release(char *ch);
 
-const char*
-overwrite_opt_to_string (enum OverwriteOpt oo);
-enum OverwriteOpt string_to_overwrite_opt (char* str);
-int rip_manager_get_content_type (RIP_MANAGER_INFO* rmi);
+const char *overwrite_opt_to_string(enum OverwriteOpt oo);
+enum OverwriteOpt string_to_overwrite_opt(char *str);
+int rip_manager_get_content_type(RIP_MANAGER_INFO *rmi);
 
 #endif //__RIP_MANANGER_H__

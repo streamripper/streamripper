@@ -23,12 +23,12 @@
 
 #define debug_mprintf debug_printf
 
-void debug_open (void);
-void debug_set_filename (char* filename);
-void debug_close (void);
-void debug_printf (char* fmt, ...);
-//void debug_mprintf (mchar* fmt, ...);
-void debug_enable (void);
-void debug_print_error (void);
+void debug_open(void);
+void debug_set_filename(char *filename);
+void debug_close(void);
+void debug_printf(char *fmt, ...);
+// void debug_mprintf (mchar* fmt, ...);
+void debug_enable(void);
+void debug_print_error(void);
 
 #endif
