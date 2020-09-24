@@ -388,7 +388,8 @@ ripstream_mp3_write_oldest_node (RIP_MANAGER_INFO* rmi)
                 char* write_ptr_wav;
                 long write_sz_wav;
 		/* Use MAD to decode mp3 into wav */
-		mp3_to_wav (&write_ptr_wav, &write_sz_wav, write_ptr, write_sz);
+		mp3_to_wav ((unsigned char**)&write_ptr_wav, (unsigned long*)&write_sz_wav,
+                            (const unsigned char*)write_ptr, (unsigned long)write_sz);
 		filelib_write_track (writer, write_ptr_wav, write_sz_wav);
 		free(write_ptr_wav);
             } else {

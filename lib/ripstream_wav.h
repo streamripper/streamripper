@@ -20,6 +20,7 @@
 #include "srtypes.h"
 
 error_code
-mp3_to_wav (char** write_ptr_wav, long* write_sz_wav, const char* write_ptr, const long write_sz);
+mp3_to_wav (unsigned char** ptr_wav, unsigned long* sz_wav,
+            const unsigned char* ptr_mp3, const unsigned long sz_mp3);
 
 #endif
