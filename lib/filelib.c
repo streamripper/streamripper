@@ -157,7 +157,10 @@ filelib_init (RIP_MANAGER_INFO* rmi,
 
     switch (content_type) {
     case CONTENT_TYPE_MP3:
-	fli->m_extension = m_(".mp3");
+        if (rmi->prefs->wav_output)
+	    fli->m_extension = m_(".mp3");
+	else
+            fli->m_extension = m_(".wav");
 	break;
     case CONTENT_TYPE_NSV:
     case CONTENT_TYPE_ULTRAVOX:

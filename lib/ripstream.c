@@ -32,7 +32,6 @@
 #include "ripstream.h"
 #include "ripstream_mp3.h"
 #include "ripstream_ogg.h"
-#include "ripstream_wav.h"
 #include "debug.h"
 #include "filelib.h"
 #include "relaylib.h"
@@ -56,9 +55,6 @@ static error_code get_track_from_metadata (RIP_MANAGER_INFO* rmi,
 error_code
 ripstream_rip (RIP_MANAGER_INFO* rmi)
 {
-    if (rmi->prefs->wav_output)
-        return ripstream_wav_rip (rmi);
-
     /* Main loop for ripping */
     switch (rmi->http_info.content_type) {
     case CONTENT_TYPE_OGG :

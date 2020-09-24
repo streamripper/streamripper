@@ -20,6 +20,6 @@
 #include "srtypes.h"
 
 error_code
-ripstream_wav_rip (RIP_MANAGER_INFO* rmi);
+mp3_to_wav (char** write_ptr_wav, long* write_sz_wav, const char* write_ptr, const long write_sz);
 
 #endif

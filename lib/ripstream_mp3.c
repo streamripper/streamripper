@@ -31,12 +31,12 @@
 #include "rip_manager.h"
 #include "ripstream.h"
 #include "ripstream_mp3.h"
+#include "ripstream_wav.h"
 #include "debug.h"
 #include "filelib.h"
 #include "relaylib.h"
 #include "socklib.h"
 #include "external.h"
-#include "ripogg.h"
 #include "track_info.h"
 #include "callback.h"
 
@@ -384,7 +384,16 @@ ripstream_mp3_write_oldest_node (RIP_MANAGER_INFO* rmi)
 		    - writer->m_next_byte.offset;
 	    }
 	    write_ptr = ((char*) node->data) + writer->m_next_byte.offset;
-	    filelib_write_track (writer, write_ptr, write_sz);
+	    if (rmi->prefs->wav_output) {
+                char* write_ptr_wav;
+                long write_sz_wav;
+		/* Use MAD to decode mp3 into wav */
+		mp3_to_wav (&write_ptr_wav, &write_sz_wav, write_ptr, write_sz);
+		filelib_write_track (writer, write_ptr_wav, write_sz_wav);
+		free(write_ptr_wav);
+            } else {
+	        filelib_write_track (writer, write_ptr, write_sz);
+            }
 
 	    /* Check if we need to end the track */
 	    if (writer->m_last_byte.node == node) {
