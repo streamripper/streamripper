@@ -499,6 +499,8 @@ struct stream_prefs
     enum OverwriteOpt overwrite;	// overwrite file in complete?
     SPLITPOINT_OPTIONS sp_opt;		// options for splitpoint rules
     CODESET_OPTIONS cs_opt;             // which codeset should i use?
+
+    int wav_output;                     // rip stream into WAV format?
 };
 
 typedef struct wstreamripper_prefs WSTREAMRIPPER_PREFS;

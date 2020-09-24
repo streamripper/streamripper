@@ -301,6 +301,7 @@ print_usage (FILE* stream)
 #endif
     fprintf(stream, "      -T             - Truncate duplicated tracks in incomplete\n");
     fprintf(stream, "      -E command     - Run external command to fetch metadata\n");
+    fprintf(stream, "      --wav          - Rip stream into WAV format\n");
     fprintf(stream, "      --quiet        - Don't print ripping status to console\n");
     fprintf(stream, "      --stderr       - Print ripping status to stderr (old behavior)\n");
     fprintf(stream, "      --debug        - Save debugging trace\n");
@@ -521,6 +522,12 @@ parse_extended_options (STREAM_PREFS* prefs, char* rule)
     if (!strcmp(rule,"version")) {
 	printf("Streamripper %s\n", SRVERSION);
 	exit(0);
+    }
+
+    /* Use WAV format for output */
+    if (!strcmp(rule,"wav")) {
+        prefs->wav_output = TRUE;
+	return;
     }
 
     /* Logging options */

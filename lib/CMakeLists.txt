@@ -27,7 +27,8 @@ SET (STREAMRIPPER_LIB_SRC
 	ripogg.c ripogg.h
 	ripstream.c ripstream.h
 	ripstream_mp3.c ripstream_mp3.h
-	ripstream_ogg.c
+	ripstream_ogg.c ripstream_ogg.h
+	ripstream_wav.c ripstream_wav.h
 	rip_manager.c rip_manager.h
 	socklib.c socklib.h
 	threadlib.c threadlib.h
