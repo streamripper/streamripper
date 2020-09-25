@@ -127,6 +127,7 @@ ripstream_mp3_rip (RIP_MANAGER_INFO* rmi)
 
     /* If first time through, check the bitrate in the stream. */
     if (rmi->ripstream_first_time_through) {
+	memcpy(rmi->getbuffer, node->data, rmi->getbuffer_size);
 	rc = ripstream_mp3_check_bitrate (rmi);
 	if (rc != SR_SUCCESS) return rc;
     }
