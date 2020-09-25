@@ -67,6 +67,7 @@ static enum mad_flow output(void *data,
     unsigned int nsamples = pcm->length;
     buffer->ptr_wav = realloc(buffer->ptr_wav, buffer->sz_wav + nsamples * 4);
     unsigned char* ptr = buffer->ptr_wav + buffer->sz_wav;
+    buffer->sz_wav += nsamples * sizeof(int);
     while (nsamples--)
     {
         signed int sample;
@@ -80,7 +81,6 @@ static enum mad_flow output(void *data,
             *(ptr++) = sample >> 8;
         }
     }
-    buffer->sz_wav += nsamples * sizeof(int);
     return MAD_FLOW_CONTINUE;
 }
 
@@ -121,6 +121,9 @@ mp3_to_wav (unsigned char** ptr_wav, unsigned long* sz_wav,
 	*sz_wav = buffer.sz_wav;
         return SR_SUCCESS;
     }
+
+    *ptr_wav = NULL;
+    *sz_wav = 0;
 
     return SR_ERROR_DECODE_FAILURE;
 }

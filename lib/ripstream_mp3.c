@@ -385,13 +385,14 @@ ripstream_mp3_write_oldest_node (RIP_MANAGER_INFO* rmi)
 	    }
 	    write_ptr = ((char*) node->data) + writer->m_next_byte.offset;
 	    if (rmi->prefs->wav_output) {
-                char* write_ptr_wav;
-                long write_sz_wav;
+                char* write_ptr_wav = NULL;
+                long write_sz_wav = 0;
 		/* Use MAD to decode mp3 into wav */
-		mp3_to_wav ((unsigned char**)&write_ptr_wav, (unsigned long*)&write_sz_wav,
-                            (const unsigned char*)write_ptr, (unsigned long)write_sz);
-		filelib_write_track (writer, write_ptr_wav, write_sz_wav);
-		free(write_ptr_wav);
+		if (mp3_to_wav ((unsigned char**)&write_ptr_wav, (unsigned long*)&write_sz_wav,
+                                (const unsigned char*)write_ptr, (unsigned long)write_sz) == SR_SUCCESS)
+		    filelib_write_track (writer, write_ptr_wav, write_sz_wav);
+		if (write_ptr_wav)
+		    free(write_ptr_wav);
             } else {
 	        filelib_write_track (writer, write_ptr, write_sz);
             }
