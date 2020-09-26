@@ -26,6 +26,7 @@ struct buffer {
     unsigned long sz_mp3;
     unsigned char *ptr_wav;
     unsigned long sz_wav;
+    struct mad_decoder decoder;
 };
 
 static int sfd;
@@ -100,25 +101,42 @@ static enum mad_flow error(void *data,
  * Public functions
  *****************************************************************************/
 error_code
-mp3_to_wav (unsigned char** ptr_wav, unsigned long* sz_wav,
-            const unsigned char* ptr_mp3, const unsigned long sz_mp3)
+mp3_to_wav_init (void** handle)
 {
-    struct buffer buffer;
-    buffer.ptr_mp3 = ptr_mp3;
-    buffer.sz_mp3 = sz_mp3;
-    buffer.ptr_wav = NULL;
-    buffer.sz_wav = 0;
+    if (!handle) return SR_ERROR_INVALID_PARAM;
+   
+    struct buffer* buffer = malloc(sizeof(struct buffer));
+
+    mad_decoder_init(
+        &buffer->decoder,
+        buffer,
+        input /*input */,
+        NULL /* header */,
+        NULL /* filter */,
+        output /* output */,
+	error /* error */,
+	NULL /* message */);
+
+    *handle = buffer;
+    return SR_SUCCESS;    
+}
+	
+error_code
+mp3_to_wav_run (void* handle, unsigned char** ptr_wav, unsigned long* sz_wav,
+                const unsigned char* ptr_mp3, const unsigned long sz_mp3)
+{
+    struct buffer* buffer = handle;
+    buffer->ptr_mp3 = ptr_mp3;
+    buffer->sz_mp3 = sz_mp3;
+    buffer->ptr_wav = NULL;
+    buffer->sz_wav = 0;
 
     /* Use MAD to decode mp3 into wav */
-    struct mad_decoder decoder;
-    mad_decoder_init(&decoder, &buffer, input, 0, 0, output, error, 0);
-    mad_decoder_options(&decoder, 0);
-    int result = mad_decoder_run(&decoder, MAD_DECODER_MODE_SYNC);
-    mad_decoder_finish(&decoder);
+    int result = mad_decoder_run(&buffer->decoder, MAD_DECODER_MODE_SYNC);
 
     if (result == 0) {
-        *ptr_wav = buffer.ptr_wav;
-	*sz_wav = buffer.sz_wav;
+        *ptr_wav = buffer->ptr_wav;
+	*sz_wav = buffer->sz_wav;
         return SR_SUCCESS;
     }
 
@@ -126,5 +144,15 @@ mp3_to_wav (unsigned char** ptr_wav, unsigned long* sz_wav,
     *sz_wav = 0;
 
     return SR_ERROR_DECODE_FAILURE;
+}
+
+error_code
+mp3_to_wav_finish (void* handle)
+{
+    struct buffer* buffer = handle;
+    mad_decoder_finish(&buffer->decoder);
+
+    free(handle);
+    return SR_SUCCESS;
 }
 

@@ -650,6 +650,9 @@ struct RIP_MANAGER_INFOst
 
     /* Mchar codesets -- these shadow prefs codesets */
     CODESET_OPTIONS mchar_cs;
+
+    /* A MAD decoder to decode mp3 into wav on-the-fly */
+    void* mp3_to_wav;
 };
 
 #endif

@@ -248,6 +248,9 @@ ripstream_mp3_start_track (RIP_MANAGER_INFO* rmi, Writer *writer)
 
     debug_printf ("ripstream_mp3_start_track (starting)\n");
 
+    if (rmi->prefs->wav_output)
+        mp3_to_wav_init(&rmi->mp3_to_wav);
+
     /* Open output file */
     rc = filelib_start (rmi, writer, ti);
     if (rc != SR_SUCCESS) {
@@ -389,8 +392,8 @@ ripstream_mp3_write_oldest_node (RIP_MANAGER_INFO* rmi)
                 char* write_ptr_wav = NULL;
                 long write_sz_wav = 0;
 		/* Use MAD to decode mp3 into wav */
-		if (mp3_to_wav ((unsigned char**)&write_ptr_wav, (unsigned long*)&write_sz_wav,
-                                (const unsigned char*)write_ptr, (unsigned long)write_sz) == SR_SUCCESS)
+		if (mp3_to_wav_run (rmi->mp3_to_wav, (unsigned char**)&write_ptr_wav, (unsigned long*)&write_sz_wav,
+                                    (const unsigned char*)write_ptr, (unsigned long)write_sz) == SR_SUCCESS)
 		    filelib_write_track (writer, write_ptr_wav, write_sz_wav);
 		if (write_ptr_wav)
 		    free(write_ptr_wav);
@@ -627,6 +630,11 @@ ripstream_mp3_end_track (RIP_MANAGER_INFO* rmi,
     rc = ripstream_end_track (rmi, writer);
     if (rc != SR_SUCCESS) {
 	return rc;
+    }
+
+    if (rmi->prefs->wav_output && rmi->mp3_to_wav) {
+        mp3_to_wav_finish(rmi->mp3_to_wav);
+	rmi->mp3_to_wav = NULL;
     }
 
     return SR_SUCCESS;
