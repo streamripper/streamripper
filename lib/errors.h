@@ -82,6 +82,7 @@
 #define SR_ERROR_CANT_CREATE_SOCKET	        - 0x42
 #define SR_ERROR_CREATE_PIPE_FAILED	        - 0x43
 #define SR_ERROR_ABORT_PIPE_SIGNALLED           - 0x44  // Not an error
+#define SR_ERROR_BUFFER_NOT_FULL                - 0x45
 
 typedef struct ERROR_INFOst
 {

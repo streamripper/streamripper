@@ -217,7 +217,7 @@ cbuf3_ogg_remove_old_page_references (Cbuf3 *cbuf3)
     Ogg_page_reference *opr;
 
     if (!cbuf3_is_full (cbuf3)) {
-	return;
+	return SR_ERROR_BUFFER_NOT_FULL;
     }
 
     /* Loop through page references, starting at head, looking for 

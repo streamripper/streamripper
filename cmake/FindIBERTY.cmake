@@ -1,19 +1,19 @@
 # FindIBERTY.cmake
-# Find the libmad includes and library
+# Find the libiberty includes and library
 #
-#  IBERTY_INCLUDE_DIR - where to find mad.h, etc.
-#  IBERTY_LIBRARIES   - List of libraries when using mad
-#  IBERTY_FOUND       - True if mad found.
+#  IBERTY_INCLUDE_DIR - where to find iberty.h, etc.
+#  IBERTY_LIBRARIES   - List of libraries when using iberty
+#  IBERTY_FOUND       - True if iberty found.
 #
-# In debian, it is in binutils-dev
+# In debian, it is in libiberty-dev (used to be in binutils-dev)
 
 IF (IBERTY_INCLUDE_DIR)
   # Already in cache, be silent
   SET (IBERTY_FIND_QUIETLY TRUE)
 ENDIF (IBERTY_INCLUDE_DIR)
 
-FIND_PATH (IBERTY_INCLUDE_DIR libiberty.h)
-FIND_LIBRARY (IBERTY_LIBRARIES NAMES iberty)
+FIND_PATH (IBERTY_INCLUDE_DIR libiberty.h PATH_SUFFIXES libiberty)
+FIND_LIBRARY (IBERTY_LIBRARY NAMES iberty)
 
 # handle the QUIETLY and REQUIRED arguments and set IBERTY_FOUND to TRUE if 
 # all listed variables are TRUE
