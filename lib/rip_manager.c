@@ -28,6 +28,7 @@
  *     void rip_manager_cleanup (void);
  *
  *****************************************************************************/
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -144,7 +145,17 @@ rip_manager_stop(RIP_MANAGER_INFO *rmi) {
 /* Write to pipe so ripping thread will exit select() */
 #if __UNIX__
 	debug_printf("Writing to abort_pipe.\n");
-	write(rmi->abort_pipe[1], "0", 1);
+	int rc = write(rmi->abort_pipe[1], "0", 1);
+	if (rc == -1) {
+		const int write_error = errno;
+		debug_printf("failed: ");
+		char error_text[1024];
+		const bool use_text = strerror_r(write_error, error_text, sizeof(error_text)) == 0;
+		if (use_text)
+			debug_printf("%s\n", error_text);
+		else
+			debug_printf("%i\n", write_error);
+	}
 #endif
 
 	// Make sure the ripping started before we try to stop
