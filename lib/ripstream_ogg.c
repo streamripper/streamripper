@@ -32,6 +32,7 @@
 #include "external.h"
 #include "ripogg.h"
 #include "track_info.h"
+#include "callback.h"
 
 /******************************************************************************
  * Private functions
@@ -268,7 +269,7 @@ ripstream_ogg_rip (RIP_MANAGER_INFO* rmi)
     /* If buffer is full eject oldest node */
     rc = cbuf3_ogg_remove_old_page_references (cbuf3);
     if (rc != SR_SUCCESS) {
-	debug_printf ("ripstream_ogg_eject_oldest_node returned: %d\n", rc);
+	debug_printf ("cbuf3_ogg_remove_old_page_references returned: %d\n", rc);
 	return rc;
     }
 

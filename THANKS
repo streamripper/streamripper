@@ -1,5 +1,12 @@
 Thanks to all the people who have contributed to streamripper!
 
+THANKS (1.66)
+---------------------
+"Jeroen Derks" <info@magentron.com> for HTTP/1.0 flag, merging
+"rico-chet" for fixing compiler warnings, memory leaks, valgrind issues
+"xelarellum" for adding tests
+"dmikushin" for save as WAV support
+
 THANKS (1.65)
 ---------------------
 "bombela" <bombela@gmail.com> for bug fix in substitution parsing.

@@ -17,11 +17,11 @@
 #ifndef __FILELIB_H__
 #define __FILELIB_H__
 
-#include "srtypes.h"
 #include "errors.h"
+#include "srtypes.h"
 #if WIN32
-#include <windows.h>
 #include <io.h>
+#include <windows.h>
 #endif
 
 #if WIN32
@@ -32,7 +32,6 @@
 #define PATH_SLASH_STR m_("/")
 #endif
 
-
 /* Pathname support.
    Copyright (C) 1995-1999, 2000-2003 Free Software Foundation, Inc.
    Contributed by Ulrich Drepper <drepper@gnu.ai.mit.edu>, 1995.
@@ -41,63 +40,56 @@
    IS_ABSOLUTE_PATH(P)  tests whether P is an absolute path.  If it is not,
                         it may be concatenated to a directory pathname. */
 #if defined _WIN32 || defined __WIN32__ || defined __EMX__ || defined __DJGPP__
-  /* Win32, OS/2, DOS */
-# define ISSLASH(C) ((C) == m_('/') || (C) == m_('\\'))
-# define HAS_DEVICE(P) \
-    ((((P)[0] >= m_('A') && (P)[0] <= m_('Z')) \
-      || ((P)[0] >= m_('a') && (P)[0] <= m_('z'))) \
-     && (P)[1] == m_(':'))
+/* Win32, OS/2, DOS */
+#define ISSLASH(C) ((C) == m_('/') || (C) == m_('\\'))
+#define HAS_DEVICE(P)                              \
+	((((P)[0] >= m_('A') && (P)[0] <= m_('Z'))     \
+	  || ((P)[0] >= m_('a') && (P)[0] <= m_('z'))) \
+	 && (P)[1] == m_(':'))
 /* GCS: This is not correct, because it could be c:foo which is relative */
 /* # define IS_ABSOLUTE_PATH(P) (ISSLASH ((P)[0]) || HAS_DEVICE (P)) */
-# define IS_ABSOLUTE_PATH(P) ISSLASH ((P)[0])
+#define IS_ABSOLUTE_PATH(P) ISSLASH((P)[0])
 #else
-  /* Unix */
-# define ISSLASH(C) ((C) == m_('/'))
-# define HAS_DEVICE(P) (0)
-# define IS_ABSOLUTE_PATH(P) ISSLASH ((P)[0])
+/* Unix */
+#define ISSLASH(C) ((C) == m_('/'))
+#define HAS_DEVICE(P) (0)
+#define IS_ABSOLUTE_PATH(P) ISSLASH((P)[0])
 #endif
 
-#define SR_MIN_FILENAME		54     /* For files in incomplete */
-#define SR_MIN_COMPLETEDIR      10     /* For dir with radio station name */
-#define SR_DATE_LEN		11
-#define SR_MIN_COMPLETE_W_DATE	(SR_MIN_COMPLETEDIR+SR_DATE_LEN)
+#define SR_MIN_FILENAME 54    /* For files in incomplete */
+#define SR_MIN_COMPLETEDIR 10 /* For dir with radio station name */
+#define SR_DATE_LEN 11
+#define SR_MIN_COMPLETE_W_DATE (SR_MIN_COMPLETEDIR + SR_DATE_LEN)
 /* Directory lengths, including trailing slash */
-#define SR_MAX_INCOMPLETE  (SR_MAX_PATH-SR_MIN_FILENAME)
-#define SR_MAX_COMPLETE    (SR_MAX_INCOMPLETE-strlen("incomplete/"))
-#define SR_MAX_BASE        (SR_MAX_COMPLETE-SR_MIN_COMPLETEDIR-strlen("/"))
-#define SR_MAX_BASE_W_DATE (SR_MAX_BASE-SR_MIN_COMPLETE_W_DATE)
+#define SR_MAX_INCOMPLETE (SR_MAX_PATH - SR_MIN_FILENAME)
+#define SR_MAX_COMPLETE (SR_MAX_INCOMPLETE - strlen("incomplete/"))
+#define SR_MAX_BASE (SR_MAX_COMPLETE - SR_MIN_COMPLETEDIR - strlen("/"))
+#define SR_MAX_BASE_W_DATE (SR_MAX_BASE - SR_MIN_COMPLETE_W_DATE)
 
+error_code filelib_init(
+    RIP_MANAGER_INFO *rmi,
+    BOOL do_individual_tracks,
+    BOOL do_count,
+    int count_start,
+    BOOL keep_incomplete,
+    BOOL do_show_file,
+    int content_type,
+    char *output_directory,
+    char *output_pattern,
+    char *showfile_pattern,
+    int get_separate_dirs,
+    int get_date_stamp,
+    char *icy_name);
+error_code filelib_start(RIP_MANAGER_INFO *rmi, TRACK_INFO *ti);
+error_code filelib_write_track(RIP_MANAGER_INFO *rmi, char *buf, u_long size);
+error_code filelib_write_show(RIP_MANAGER_INFO *rmi, char *buf, u_long size);
+error_code filelib_write_cue(RIP_MANAGER_INFO *rmi, TRACK_INFO *ti, int secs);
+error_code filelib_end(
+    RIP_MANAGER_INFO *rmi,
+    TRACK_INFO *ti,
+    enum OverwriteOpt overwrite,
+    BOOL truncate_dup,
+    mchar *fullpath);
+void filelib_shutdown(RIP_MANAGER_INFO *rmi);
 
-error_code
-filelib_init (RIP_MANAGER_INFO* rmi,
-	      BOOL do_individual_tracks,
-	      BOOL do_count,
-	      int count_start,
-	      BOOL keep_incomplete,
-	      BOOL do_show_file,
-	      int content_type,
-	      char* output_directory,
-	      char* output_pattern,
-	      char* showfile_pattern,
-	      int get_separate_dirs,
-	      int get_date_stamp,
-	      char* icy_name);
-error_code
-filelib_start (RIP_MANAGER_INFO* rmi, Writer *writer, TRACK_INFO* ti);
-error_code
-filelib_write_track (Writer *writer, char *buf, u_long size);
-error_code
-filelib_write_show (RIP_MANAGER_INFO* rmi, char *buf, u_long size);
-error_code filelib_write_cue (RIP_MANAGER_INFO* rmi, TRACK_INFO* ti, int secs);
-error_code
-filelib_close (
-    RIP_MANAGER_INFO* rmi,
-    Writer *writer
-);
-error_code
-filelib_rename_to_complete (
-    RIP_MANAGER_INFO* rmi,
-    Writer *writer);
-void filelib_shutdown (RIP_MANAGER_INFO* rmi);
-
-#endif //FILELIB
+#endif // FILELIB

@@ -1,3 +1,12 @@
+New for 1.66.0-alpha
+------------------------------------
+* Add flag --http10 to support streams that are not properly handled using
+  HTTP/1.1
+* Add flag --wav
+* Many fixes (bugs, compiler warnings, memory leaks, tests, valgrind
+  issues)
+* Some parts untested
+
 New for 1.65.0
 ------------------------------------
 * Fix discontinuities in ogg page numbers (#1392868)

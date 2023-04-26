@@ -1,8 +1,8 @@
 /*
  * uce-dirent.h - operating system independent dirent implementation
- * 
+ *
  * Copyright (C) 1998-2002  Toni Ronkko
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the
  * ``Software''), to deal in the Software without restriction, including
@@ -10,10 +10,10 @@
  * distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to
  * the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included
  * in all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED ``AS IS'', WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -21,8 +21,8 @@
  * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
  * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  * OTHER DEALINGS IN THE SOFTWARE.
- * 
- * 
+ *
+ *
  * May 28 1998, Toni Ronkko <tronkko@messi.uku.fi>
  *
  * $Id: uce_dirent.h,v 1.1 2005/07/10 19:24:57 gregsharp Exp $
@@ -61,7 +61,7 @@
  * Revision 1.1  1998/07/04 16:27:51  tr
  * Initial revision
  *
- * 
+ *
  * MSVC 1.0 scans automatic dependencies incorrectly when your project
  * contains this very header.  The problem is that MSVC cannot handle
  * include directives inside #if..#endif block those are never entered.
@@ -85,6 +85,7 @@
 #define DIRENT_H
 #define DIRENT_H_INCLUDED
 
+/* clang-format off */
 /* find out platform */
 #if defined(MSDOS)                             /* MS-DOS */
 #elif defined(__MSDOS__)                       /* Turbo C/Borland */
@@ -163,8 +164,8 @@
 # define NAMLEN(dp) ((int)((dp)->d_namlen))
 
 #elif defined(HAVE_SYS_DIR_H)
-# include <sys/types.h>
 # include <sys/dir.h>
+# include <sys/types.h>
 # ifndef dirent
 #   define dirent direct
 # endif
@@ -293,11 +294,11 @@ static void rewinddir (DIR *dirp);
  * it is sufficient to include this very header from source modules using
  * dirent functions and the functions will be pulled in automatically.
  */
+#include <assert.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
-#include <errno.h>
 
 /* use ffblk instead of _find_t if requested */
 #if defined(DIRENT_USE_FFBLK)
@@ -311,10 +312,11 @@ static void rewinddir (DIR *dirp);
 # define _dos_findnext(dest) findnext(dest)
 # define _dos_findfirst(name,flags,dest) findfirst(name,dest,flags)
 #endif
+/* clang-format on */
 
-static int _initdir (DIR *p);
-static const char *_getdirname (const struct dirent *dp);
-static void _setdirname (struct DIR *dirp);
+static int _initdir(DIR *p);
+static const char *_getdirname(const struct dirent *dp);
+static void _setdirname(struct DIR *dirp);
 
 /*
  * <function name="opendir">
@@ -325,7 +327,7 @@ static void _setdirname (struct DIR *dirp);
  * internal working area that is used for retrieving individual directory
  * entries.  The internal working area has no fields of your interest.
  *
- * <ret>Returns a pointer to the internal working area or NULL in case the 
+ * <ret>Returns a pointer to the internal working area or NULL in case the
  * directory stream could not be opened.  Global `errno' variable will set
  * in case of error as follows:
  *
@@ -343,51 +345,47 @@ static void _setdirname (struct DIR *dirp);
  * </function>
  */
 static DIR *
-opendir(
-    const char *dirname)
-{
-  DIR *dirp;
-  assert (dirname != NULL);
-  
-  dirp = (DIR*)malloc (sizeof (struct DIR));
-  if (dirp != NULL) {
-    char *p;
-    
-    /* allocate room for directory name */
-    dirp->dirname = (char*) malloc (strlen (dirname) + 1 + strlen ("\\*.*"));
-    if (dirp->dirname == NULL) {
-      /* failed to duplicate directory name.  errno set by malloc() */
-      free (dirp);
-      return NULL;
-    }
-    /* Copy directory name while appending directory separator and "*.*".
-     * Directory separator is not appended if the name already ends with
-     * drive or directory separator.  Directory separator is assumed to be
-     * '/' or '\' and drive separator is assumed to be ':'. */
-    strcpy (dirp->dirname, dirname);
-    p = strchr (dirp->dirname, '\0');
-    if (dirp->dirname < p  &&
-        *(p - 1) != '\\'  &&  *(p - 1) != '/'  &&  *(p - 1) != ':')
-    {
-      strcpy (p++, "\\");
-    }
-# ifdef DIRENT_WIN32_INTERFACE
-    strcpy (p, "*"); /*scan files with and without extension in win32*/
-# else
-    strcpy (p, "*.*"); /*scan files with and without extension in DOS*/
-# endif
+opendir(const char *dirname) {
+	DIR *dirp;
+	assert(dirname != NULL);
 
-    /* open stream */
-    if (_initdir (dirp) == 0) {
-      /* initialization failed */
-      free (dirp->dirname);
-      free (dirp);
-      return NULL;
-    }
-  }
-  return dirp;
+	dirp = (DIR *)malloc(sizeof(struct DIR));
+	if (dirp != NULL) {
+		char *p;
+
+		/* allocate room for directory name */
+		dirp->dirname = (char *)malloc(strlen(dirname) + 1 + strlen("\\*.*"));
+		if (dirp->dirname == NULL) {
+			/* failed to duplicate directory name.  errno set by malloc() */
+			free(dirp);
+			return NULL;
+		}
+		/* Copy directory name while appending directory separator and "*.*".
+		 * Directory separator is not appended if the name already ends with
+		 * drive or directory separator.  Directory separator is assumed to be
+		 * '/' or '\' and drive separator is assumed to be ':'. */
+		strcpy(dirp->dirname, dirname);
+		p = strchr(dirp->dirname, '\0');
+		if (dirp->dirname < p && *(p - 1) != '\\' && *(p - 1) != '/'
+		    && *(p - 1) != ':') {
+			strcpy(p++, "\\");
+		}
+#ifdef DIRENT_WIN32_INTERFACE
+		strcpy(p, "*"); /*scan files with and without extension in win32*/
+#else
+		strcpy(p, "*.*"); /*scan files with and without extension in DOS*/
+#endif
+
+		/* open stream */
+		if (_initdir(dirp) == 0) {
+			/* initialization failed */
+			free(dirp->dirname);
+			free(dirp);
+			return NULL;
+		}
+	}
+	return dirp;
 }
-
 
 /*
  * <function name="readdir">
@@ -436,59 +434,58 @@ opendir(
  * </function>
  */
 static struct dirent *
-readdir (DIR *dirp)
-{
-  assert (dirp != NULL);
-  if (dirp == NULL) {
-    errno = EBADF;
-    return NULL;
-  }
+readdir(DIR *dirp) {
+	assert(dirp != NULL);
+	if (dirp == NULL) {
+		errno = EBADF;
+		return NULL;
+	}
 
 #if defined(DIRENT_WIN32_INTERFACE)
-  if (dirp->search_handle == INVALID_HANDLE_VALUE) {
-    /* directory stream was opened/rewound incorrectly or it ended normally */
-    errno = EBADF;
-    return NULL;
-  }
+	if (dirp->search_handle == INVALID_HANDLE_VALUE) {
+		/* directory stream was opened/rewound incorrectly or it ended normally
+		 */
+		errno = EBADF;
+		return NULL;
+	}
 #endif
 
-  if (dirp->dirent_filled != 0) {
-    /*
-     * Directory entry has already been retrieved and there is no need to
-     * retrieve a new one.  Directory entry will be retrieved in advance
-     * when the user calls readdir function for the first time.  This is so
-     * because real dirent has separate functions for opening and reading
-     * the stream whereas Win32 and DOS dirents open the stream
-     * automatically when we retrieve the first file.  Therefore, we have to
-     * save the first file when opening the stream and later we have to
-     * return the saved entry when the user tries to read the first entry.
-     */
-    dirp->dirent_filled = 0;
-  } else {
-    /* fill in entry and return that */
+	if (dirp->dirent_filled != 0) {
+		/*
+		 * Directory entry has already been retrieved and there is no need to
+		 * retrieve a new one.  Directory entry will be retrieved in advance
+		 * when the user calls readdir function for the first time.  This is so
+		 * because real dirent has separate functions for opening and reading
+		 * the stream whereas Win32 and DOS dirents open the stream
+		 * automatically when we retrieve the first file.  Therefore, we have to
+		 * save the first file when opening the stream and later we have to
+		 * return the saved entry when the user tries to read the first entry.
+		 */
+		dirp->dirent_filled = 0;
+	} else {
+/* fill in entry and return that */
 #if defined(DIRENT_WIN32_INTERFACE)
-    if (FindNextFile (dirp->search_handle, &dirp->current.data) == FALSE) {
-      /* Last file has been processed or an error occured */
-      FindClose (dirp->search_handle);
-      dirp->search_handle = INVALID_HANDLE_VALUE;
-      errno = ENOENT;
-      return NULL;
-    }
+		if (FindNextFile(dirp->search_handle, &dirp->current.data) == FALSE) {
+			/* Last file has been processed or an error occured */
+			FindClose(dirp->search_handle);
+			dirp->search_handle = INVALID_HANDLE_VALUE;
+			errno = ENOENT;
+			return NULL;
+		}
 
-# elif defined(DIRENT_MSDOS_INTERFACE)
-    if (_dos_findnext (&dirp->current.data) != 0) {
-      /* _dos_findnext and findnext will set errno to ENOENT when no
-       * more entries could be retrieved. */
-      return NULL;
-    }
-# endif
+#elif defined(DIRENT_MSDOS_INTERFACE)
+		if (_dos_findnext(&dirp->current.data) != 0) {
+			/* _dos_findnext and findnext will set errno to ENOENT when no
+			 * more entries could be retrieved. */
+			return NULL;
+		}
+#endif
 
-    _setdirname (dirp);
-    assert (dirp->dirent_filled == 0);
-  }
-  return &dirp->current;
+		_setdirname(dirp);
+		assert(dirp->dirent_filled == 0);
+	}
+	return &dirp->current;
 }
-
 
 /*
  * <function name="closedir">
@@ -510,40 +507,39 @@ readdir (DIR *dirp)
  * </function>
  */
 static int
-closedir (DIR *dirp)
-{   
-  int retcode = 0;
+closedir(DIR *dirp) {
+	int retcode = 0;
 
-  /* make sure that dirp points to legal structure */
-  assert (dirp != NULL);
-  if (dirp == NULL) {
-    errno = EBADF;
-    return -1;
-  }
- 
-  /* free directory name and search handles */
-  if (dirp->dirname != NULL) free (dirp->dirname);
+	/* make sure that dirp points to legal structure */
+	assert(dirp != NULL);
+	if (dirp == NULL) {
+		errno = EBADF;
+		return -1;
+	}
+
+	/* free directory name and search handles */
+	if (dirp->dirname != NULL)
+		free(dirp->dirname);
 
 #if defined(DIRENT_WIN32_INTERFACE)
-  if (dirp->search_handle != INVALID_HANDLE_VALUE) {
-    if (FindClose (dirp->search_handle) == FALSE) {
-      /* Unknown error */
-      retcode = -1;
-      errno = EBADF;
-    }
-  }
-#endif                     
+	if (dirp->search_handle != INVALID_HANDLE_VALUE) {
+		if (FindClose(dirp->search_handle) == FALSE) {
+			/* Unknown error */
+			retcode = -1;
+			errno = EBADF;
+		}
+	}
+#endif
 
-  /* clear dirp structure to make sure that it cannot be used anymore*/
-  memset (dirp, 0, sizeof (*dirp));
-# if defined(DIRENT_WIN32_INTERFACE)
-  dirp->search_handle = INVALID_HANDLE_VALUE;
-# endif
+	/* clear dirp structure to make sure that it cannot be used anymore*/
+	memset(dirp, 0, sizeof(*dirp));
+#if defined(DIRENT_WIN32_INTERFACE)
+	dirp->search_handle = INVALID_HANDLE_VALUE;
+#endif
 
-  free (dirp);
-  return retcode;
+	free(dirp);
+	return retcode;
 }
-
 
 /*
  * <function name="rewinddir">
@@ -567,115 +563,108 @@ closedir (DIR *dirp)
  * notice it later when you try to retrieve the first directory entry.
  */
 static void
-rewinddir (DIR *dirp)
-{   
-  /* make sure that dirp is legal */
-  assert (dirp != NULL);
-  if (dirp == NULL) {
-    errno = EBADF;
-    return;
-  }
-  assert (dirp->dirname != NULL);
-  
-  /* close previous stream */
+rewinddir(DIR *dirp) {
+	/* make sure that dirp is legal */
+	assert(dirp != NULL);
+	if (dirp == NULL) {
+		errno = EBADF;
+		return;
+	}
+	assert(dirp->dirname != NULL);
+
+/* close previous stream */
 #if defined(DIRENT_WIN32_INTERFACE)
-  if (dirp->search_handle != INVALID_HANDLE_VALUE) {
-    if (FindClose (dirp->search_handle) == FALSE) {
-      /* Unknown error */
-      errno = EBADF;
-    }
-  }
+	if (dirp->search_handle != INVALID_HANDLE_VALUE) {
+		if (FindClose(dirp->search_handle) == FALSE) {
+			/* Unknown error */
+			errno = EBADF;
+		}
+	}
 #endif
 
-  /* re-open previous stream */
-  if (_initdir (dirp) == 0) {
-    /* initialization failed but we cannot deal with error.  User will notice
-     * error later when she tries to retrieve first directory enty. */
-    /*EMPTY*/;
-  }
+	/* re-open previous stream */
+	if (_initdir(dirp) == 0) {
+		/* initialization failed but we cannot deal with error.  User will
+		 * notice
+		 * error later when she tries to retrieve first directory enty. */
+		/*EMPTY*/;
+	}
 }
-
 
 /*
  * Open native directory stream object and retrieve first file.
  * Be sure to close previous stream before opening new one.
  */
 static int
-_initdir (DIR *dirp)
-{ 
-  assert (dirp != NULL);
-  assert (dirp->dirname != NULL);
-  dirp->dirent_filled = 0;
+_initdir(DIR *dirp) {
+	assert(dirp != NULL);
+	assert(dirp->dirname != NULL);
+	dirp->dirent_filled = 0;
 
-# if defined(DIRENT_WIN32_INTERFACE)
-  /* Open stream and retrieve first file */
-  dirp->search_handle = FindFirstFile (dirp->dirname, &dirp->current.data);
-  if (dirp->search_handle == INVALID_HANDLE_VALUE) {
-    /* something went wrong but we don't know what.  GetLastError() could
-     * give us more information about the error, but then we should map
-     * the error code into errno. */
-    errno = ENOENT;
-    return 0;
-  }
+#if defined(DIRENT_WIN32_INTERFACE)
+	/* Open stream and retrieve first file */
+	dirp->search_handle = FindFirstFile(dirp->dirname, &dirp->current.data);
+	if (dirp->search_handle == INVALID_HANDLE_VALUE) {
+		/* something went wrong but we don't know what.  GetLastError() could
+		 * give us more information about the error, but then we should map
+		 * the error code into errno. */
+		errno = ENOENT;
+		return 0;
+	}
 
-# elif defined(DIRENT_MSDOS_INTERFACE)
-  if (_dos_findfirst (dirp->dirname,
-          _A_SUBDIR | _A_RDONLY | _A_ARCH | _A_SYSTEM | _A_HIDDEN,
-          &dirp->current.data) != 0)
-  {
-    /* _dos_findfirst and findfirst will set errno to ENOENT when no 
-     * more entries could be retrieved. */
-    return 0;
-  }
-# endif
+#elif defined(DIRENT_MSDOS_INTERFACE)
+	if (_dos_findfirst(
+	        dirp->dirname,
+	        _A_SUBDIR | _A_RDONLY | _A_ARCH | _A_SYSTEM | _A_HIDDEN,
+	        &dirp->current.data)
+	    != 0) {
+		/* _dos_findfirst and findfirst will set errno to ENOENT when no
+		 * more entries could be retrieved. */
+		return 0;
+	}
+#endif
 
-  /* initialize DIR and it's first entry */
-  _setdirname (dirp);
-  dirp->dirent_filled = 1;
-  return 1;
+	/* initialize DIR and it's first entry */
+	_setdirname(dirp);
+	dirp->dirent_filled = 1;
+	return 1;
 }
-
 
 /*
  * Return implementation dependent name of the current directory entry.
  */
 static const char *
-_getdirname (const struct dirent *dp)
-{
+_getdirname(const struct dirent *dp) {
 #if defined(DIRENT_WIN32_INTERFACE)
-  return dp->data.cFileName;
-  
-#elif defined(DIRENT_USE_FFBLK)
-  return dp->data.ff_name;
-  
-#else
-  return dp->data.name;
-#endif  
-}
+	return dp->data.cFileName;
 
+#elif defined(DIRENT_USE_FFBLK)
+	return dp->data.ff_name;
+
+#else
+	return dp->data.name;
+#endif
+}
 
 /*
  * Copy name of implementation dependent directory entry to the d_name field.
  */
 static void
-_setdirname (struct DIR *dirp) {
-  /* make sure that d_name is long enough */
-  assert (strlen (_getdirname (&dirp->current)) <= NAME_MAX);
-  
-  strncpy (dirp->current.d_name,
-      _getdirname (&dirp->current),
-      NAME_MAX);
-  dirp->current.d_name[NAME_MAX] = '\0'; /*char d_name[NAME_MAX+1]*/
+_setdirname(struct DIR *dirp) {
+	/* make sure that d_name is long enough */
+	assert(strlen(_getdirname(&dirp->current)) <= NAME_MAX);
+
+	strncpy(dirp->current.d_name, _getdirname(&dirp->current), NAME_MAX);
+	dirp->current.d_name[NAME_MAX] = '\0'; /*char d_name[NAME_MAX+1]*/
 }
-  
-# ifdef __cplusplus
+
+#ifdef __cplusplus
 }
-# endif
-# define NAMLEN(dp) ((int)(strlen((dp)->d_name)))
+#endif
+#define NAMLEN(dp) ((int)(strlen((dp)->d_name)))
 
 #else
-# error "missing dirent interface"
+#error "missing dirent interface"
 #endif
-
 
 #endif /*DIRENT_H*/

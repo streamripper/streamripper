@@ -18,38 +18,34 @@ License along with libiberty; see the file COPYING.LIB.  If
 not, write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
-
 /*  Create and destroy argument vectors.  An argument vector is simply an
     array of string pointers, terminated by a NULL pointer. */
 
-#if defined (commentout)
+#if defined(commentout)
 #include "ansidecl.h"
 #include "libiberty.h"
 #endif
 
-#include "sr_config.h"
-
-/* Use compiler headers */
-#define ANSI_PROTOTYPES 1
+#include "config.h"
 
 #if HAVE_ALLOCA_H
-# include <alloca.h>
+#include <alloca.h>
 #elif defined __GNUC__
-# define alloca __builtin_alloca
+#define alloca __builtin_alloca
 #elif defined _AIX
-# define alloca __alloca
+#define alloca __alloca
 #elif defined _MSC_VER
-# include <malloc.h>
-# define alloca _alloca
+#include <malloc.h>
+#define alloca _alloca
 #else
-# include <stddef.h>
-# ifdef  __cplusplus
+#include <stddef.h>
+#ifdef __cplusplus
 extern "C"
-# endif
-void *alloca (size_t);
+#endif
+    void *alloca(size_t);
 #endif
 
-void freeargv (char **vector);
+void freeargv(char **vector);
 
 #define ISBLANK(ch) ((ch) == ' ' || (ch) == '\t')
 
@@ -58,22 +54,21 @@ void freeargv (char **vector);
 #ifdef ANSI_PROTOTYPES
 
 #include <stddef.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 
-#else	/* !ANSI_PROTOTYPES */
+#else /* !ANSI_PROTOTYPES */
 
 #if !defined _WIN32 || defined __GNUC__
-extern char *memcpy ();		/* Copy memory region */
-extern int strlen ();		/* Count length of string */
-extern char *malloc ();		/* Standard memory allocater */
-extern char *realloc ();	/* Standard memory reallocator */
-extern void free ();		/* Free malloc'd memory */
-extern char *strdup ();		/* Duplicate a string */
+extern char *memcpy();  /* Copy memory region */
+extern int strlen();    /* Count length of string */
+extern char *malloc();  /* Standard memory allocater */
+extern char *realloc(); /* Standard memory reallocator */
+extern void free();     /* Free malloc'd memory */
+extern char *strdup();  /* Duplicate a string */
 #endif
 
-#endif	/* ANSI_PROTOTYPES */
-
+#endif /* ANSI_PROTOTYPES */
 
 #ifndef NULL
 #define NULL 0
@@ -83,8 +78,7 @@ extern char *strdup ();		/* Duplicate a string */
 #define EOS '\0'
 #endif
 
-#define INITIAL_MAXARGC 8	/* Number of args + NULL in initial argv */
-
+#define INITIAL_MAXARGC 8 /* Number of args + NULL in initial argv */
 
 /*
 
@@ -100,36 +94,33 @@ argument vector.
 
 */
 
-char **
-dupargv (argv)
-     char **argv;
+char **dupargv(argv) char **argv;
 {
-  int argc;
-  char **copy;
-  
-  if (argv == NULL)
-    return NULL;
-  
-  /* the vector */
-  for (argc = 0; argv[argc] != NULL; argc++);
-  copy = (char **) malloc ((argc + 1) * sizeof (char *));
-  if (copy == NULL)
-    return NULL;
-  
-  /* the strings */
-  for (argc = 0; argv[argc] != NULL; argc++)
-    {
-      int len = strlen (argv[argc]);
-      copy[argc] = malloc (sizeof (char *) * (len + 1));
-      if (copy[argc] == NULL)
-	{
-	  freeargv (copy);
-	  return NULL;
+	int argc;
+	char **copy;
+
+	if (argv == NULL)
+		return NULL;
+
+	/* the vector */
+	for (argc = 0; argv[argc] != NULL; argc++)
+		;
+	copy = (char **)malloc((argc + 1) * sizeof(char *));
+	if (copy == NULL)
+		return NULL;
+
+	/* the strings */
+	for (argc = 0; argv[argc] != NULL; argc++) {
+		int len = strlen(argv[argc]);
+		copy[argc] = malloc(sizeof(char *) * (len + 1));
+		if (copy[argc] == NULL) {
+			freeargv(copy);
+			return NULL;
+		}
+		strcpy(copy[argc], argv[argc]);
 	}
-      strcpy (copy[argc], argv[argc]);
-    }
-  copy[argc] = NULL;
-  return copy;
+	copy[argc] = NULL;
+	return copy;
 }
 
 /*
@@ -145,19 +136,16 @@ itself.
 
 */
 
-void freeargv (vector)
-char **vector;
+void freeargv(vector) char **vector;
 {
-  register char **scan;
+	register char **scan;
 
-  if (vector != NULL)
-    {
-      for (scan = vector; *scan != NULL; scan++)
-	{
-	  free (*scan);
+	if (vector != NULL) {
+		for (scan = vector; *scan != NULL; scan++) {
+			free(*scan);
+		}
+		free(vector);
 	}
-      free (vector);
-    }
 }
 
 /*
@@ -200,182 +188,138 @@ returned, as appropriate.
 
 */
 
-char **buildargv (input)
-     const char *input;
+char **buildargv(input) const char *input;
 {
-  char *arg;
-  char *copybuf;
-  int squote = 0;
-  int dquote = 0;
-  int bsquote = 0;
-  int argc = 0;
-  int maxargc = 0;
-  char **argv = NULL;
-  char **nargv;
+	char *arg;
+	char *copybuf;
+	int squote = 0;
+	int dquote = 0;
+	int bsquote = 0;
+	int argc = 0;
+	int maxargc = 0;
+	char **argv = NULL;
+	char **nargv;
 
-  if (input != NULL)
-    {
-      copybuf = (char *) alloca (strlen (input) + 1);
-      /* Is a do{}while to always execute the loop once.  Always return an
-	 argv, even for null strings.  See NOTES above, test case below. */
-      do
-	{
-	  /* Pick off argv[argc] */
-	  while (ISBLANK (*input))
-	    {
-	      input++;
-	    }
-	  if ((maxargc == 0) || (argc >= (maxargc - 1)))
-	    {
-	      /* argv needs initialization, or expansion */
-	      if (argv == NULL)
-		{
-		  maxargc = INITIAL_MAXARGC;
-		  nargv = (char **) malloc (maxargc * sizeof (char *));
-		}
-	      else
-		{
-		  maxargc *= 2;
-		  nargv = (char **) realloc (argv, maxargc * sizeof (char *));
-		}
-	      if (nargv == NULL)
-		{
-		  if (argv != NULL)
-		    {
-		      freeargv (argv);
-		      argv = NULL;
-		    }
-		  break;
-		}
-	      argv = nargv;
-	      argv[argc] = NULL;
-	    }
-	  /* Begin scanning arg */
-	  arg = copybuf;
-	  while (*input != EOS)
-	    {
-	      if (ISBLANK (*input) && !squote && !dquote && !bsquote)
-		{
-		  break;
-		}
-	      else
-		{
-		  if (bsquote)
-		    {
-		      bsquote = 0;
-		      *arg++ = *input;
-		    }
-		  else if (*input == '\\')
-		    {
-		      bsquote = 1;
-		    }
-		  else if (squote)
-		    {
-		      if (*input == '\'')
-			{
-			  squote = 0;
+	if (input != NULL) {
+		copybuf = (char *)alloca(strlen(input) + 1);
+		/* Is a do{}while to always execute the loop once.  Always return an
+	   argv, even for null strings.  See NOTES above, test case below. */
+		do {
+			/* Pick off argv[argc] */
+			while (ISBLANK(*input)) {
+				input++;
 			}
-		      else
-			{
-			  *arg++ = *input;
+			if ((maxargc == 0) || (argc >= (maxargc - 1))) {
+				/* argv needs initialization, or expansion */
+				if (argv == NULL) {
+					maxargc = INITIAL_MAXARGC;
+					nargv = (char **)malloc(maxargc * sizeof(char *));
+				} else {
+					maxargc *= 2;
+					nargv = (char **)realloc(argv, maxargc * sizeof(char *));
+				}
+				if (nargv == NULL) {
+					if (argv != NULL) {
+						freeargv(argv);
+						argv = NULL;
+					}
+					break;
+				}
+				argv = nargv;
+				argv[argc] = NULL;
 			}
-		    }
-		  else if (dquote)
-		    {
-		      if (*input == '"')
-			{
-			  dquote = 0;
+			/* Begin scanning arg */
+			arg = copybuf;
+			while (*input != EOS) {
+				if (ISBLANK(*input) && !squote && !dquote && !bsquote) {
+					break;
+				} else {
+					if (bsquote) {
+						bsquote = 0;
+						*arg++ = *input;
+					} else if (*input == '\\') {
+						bsquote = 1;
+					} else if (squote) {
+						if (*input == '\'') {
+							squote = 0;
+						} else {
+							*arg++ = *input;
+						}
+					} else if (dquote) {
+						if (*input == '"') {
+							dquote = 0;
+						} else {
+							*arg++ = *input;
+						}
+					} else {
+						if (*input == '\'') {
+							squote = 1;
+						} else if (*input == '"') {
+							dquote = 1;
+						} else {
+							*arg++ = *input;
+						}
+					}
+					input++;
+				}
 			}
-		      else
-			{
-			  *arg++ = *input;
+			*arg = EOS;
+			argv[argc] = strdup(copybuf);
+			if (argv[argc] == NULL) {
+				freeargv(argv);
+				argv = NULL;
+				break;
 			}
-		    }
-		  else
-		    {
-		      if (*input == '\'')
-			{
-			  squote = 1;
-			}
-		      else if (*input == '"')
-			{
-			  dquote = 1;
-			}
-		      else
-			{
-			  *arg++ = *input;
-			}
-		    }
-		  input++;
-		}
-	    }
-	  *arg = EOS;
-	  argv[argc] = strdup (copybuf);
-	  if (argv[argc] == NULL)
-	    {
-	      freeargv (argv);
-	      argv = NULL;
-	      break;
-	    }
-	  argc++;
-	  argv[argc] = NULL;
+			argc++;
+			argv[argc] = NULL;
 
-	  while (ISBLANK (*input))
-	    {
-	      input++;
-	    }
+			while (ISBLANK(*input)) {
+				input++;
+			}
+		} while (*input != EOS);
 	}
-      while (*input != EOS);
-    }
-  return (argv);
+	return (argv);
 }
 
 #ifdef MAIN
 
 /* Simple little test driver. */
 
-static const char *const tests[] =
-{
-  "a simple command line",
-  "arg 'foo' is single quoted",
-  "arg \"bar\" is double quoted",
-  "arg \"foo bar\" has embedded whitespace",
-  "arg 'Jack said \\'hi\\'' has single quotes",
-  "arg 'Jack said \\\"hi\\\"' has double quotes",
-  "a b c d e f g h i j k l m n o p q r s t u v w x y z 1 2 3 4 5 6 7 8 9",
-  
-  /* This should be expanded into only one argument.  */
-  "trailing-whitespace ",
+static const char *const tests[] = {
+    "a simple command line",
+    "arg 'foo' is single quoted",
+    "arg \"bar\" is double quoted",
+    "arg \"foo bar\" has embedded whitespace",
+    "arg 'Jack said \\'hi\\'' has single quotes",
+    "arg 'Jack said \\\"hi\\\"' has double quotes",
+    "a b c d e f g h i j k l m n o p q r s t u v w x y z 1 2 3 4 5 6 7 8 9",
 
-  "",
-  NULL
-};
+    /* This should be expanded into only one argument.  */
+    "trailing-whitespace ",
 
-int main ()
-{
-  char **argv;
-  const char *const *test;
-  char **targs;
+    "",
+    NULL};
 
-  for (test = tests; *test != NULL; test++)
-    {
-      printf ("buildargv(\"%s\")\n", *test);
-      if ((argv = buildargv (*test)) == NULL)
-	{
-	  printf ("failed!\n\n");
+int
+main() {
+	char **argv;
+	const char *const *test;
+	char **targs;
+
+	for (test = tests; *test != NULL; test++) {
+		printf("buildargv(\"%s\")\n", *test);
+		if ((argv = buildargv(*test)) == NULL) {
+			printf("failed!\n\n");
+		} else {
+			for (targs = argv; *targs != NULL; targs++) {
+				printf("\t\"%s\"\n", *targs);
+			}
+			printf("\n");
+		}
+		freeargv(argv);
 	}
-      else
-	{
-	  for (targs = argv; *targs != NULL; targs++)
-	    {
-	      printf ("\t\"%s\"\n", *targs);
-	    }
-	  printf ("\n");
-	}
-      freeargv (argv);
-    }
 
-  return 0;
+	return 0;
 }
 
-#endif	/* MAIN */
+#endif /* MAIN */

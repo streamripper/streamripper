@@ -1,0 +1,6 @@
+:cmock:
+  :includes:
+  :treat_externs: :exclude
+  :plugins: 
+    - :callback
+    - :ignore

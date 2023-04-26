@@ -3,7 +3,7 @@
 
 /* Stifle noisy MSVC Express warnings */
 #if _MSC_VER >= 1400
-#pragma warning(disable:4996)
+#pragma warning(disable : 4996)
 #endif
 
 /* Whether the system has connect() */
@@ -139,7 +139,7 @@
 #define HAVE_WCTYPE_H 1
 
 /* Define as const if the declaration of iconv() needs const. */
-#define ICONV_CONST 
+#define ICONV_CONST
 
 /* Name of package */
 #define PACKAGE "streamripper"

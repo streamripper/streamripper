@@ -5,6 +5,7 @@
  */
 
 static const unsigned short mapping_iso_8859_2[256] = {
+    /* clang-format off */
   0x0000, 0x0001, 0x0002, 0x0003, 0x0004, 0x0005, 0x0006, 0x0007,
   0x0008, 0x0009, 0x000a, 0x000b, 0x000c, 0x000d, 0x000e, 0x000f,
   0x0010, 0x0011, 0x0012, 0x0013, 0x0014, 0x0015, 0x0016, 0x0017,
@@ -37,21 +38,16 @@ static const unsigned short mapping_iso_8859_2[256] = {
   0x010d, 0x00e9, 0x0119, 0x00eb, 0x011b, 0x00ed, 0x00ee, 0x010f,
   0x0111, 0x0144, 0x0148, 0x00f3, 0x00f4, 0x0151, 0x00f6, 0x00f7,
   0x0159, 0x016f, 0x00fa, 0x0171, 0x00fc, 0x00fd, 0x0163, 0x02d9
+    /* clang-format on */
 };
 
 static struct {
-  const char *name;
-  const unsigned short *map;
-  struct charset *charset;
-} maps[] = {
-  { "ISO-8859-2", mapping_iso_8859_2, 0 },
-  { 0, 0, 0 }
-};
+	const char *name;
+	const unsigned short *map;
+	struct charset *charset;
+} maps[] = {{"ISO-8859-2", mapping_iso_8859_2, 0}, {0, 0, 0}};
 
 static const struct {
-  const char *bad;
-  const char *good;
-} names[] = {
-  { "ANSI_X3.4-1968", "us-ascii" },
-  { 0, 0 }
-};
+	const char *bad;
+	const char *good;
+} names[] = {{"ANSI_X3.4-1968", "us-ascii"}, {0, 0}};

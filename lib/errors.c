@@ -21,37 +21,37 @@
 
 #include <errno.h>
 #include <sys/types.h>
-#if !defined (WIN32)
-#include <sys/socket.h>
-#include <netinet/in.h>
+#if !defined(WIN32)
 #include <arpa/inet.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
 #endif
 
+#include "compat.h"
+#include "debug.h"
 #include "filelib.h"
-#include "socklib.h"
+#include "findsep.h"
 #include "http.h"
 #include "mchar.h"
-#include "findsep.h"
+#include "parse.h"
 #include "relaylib.h"
 #include "rip_manager.h"
 #include "ripstream.h"
+#include "socklib.h"
 #include "threadlib.h"
-#include "debug.h"
-#include "sr_compat.h"
-#include "parse.h"
 
 /******************************************************************************
  * Private Vars
  *****************************************************************************/
 static char m_error_str[NUM_ERROR_CODES][MAX_ERROR_STR];
-#define SET_ERR_STR(str, code)	strncpy(m_error_str[code], str, MAX_ERROR_STR);
+#define SET_ERR_STR(str, code) strncpy(m_error_str[code], str, MAX_ERROR_STR);
 
 /******************************************************************************
  * Public functions
  *****************************************************************************/
 void
-errors_init (void)
-{
+errors_init(void) {
+	/* clang-format off */
     SET_ERR_STR("SR_SUCCESS",					0x00);
     SET_ERR_STR("SR_ERROR_CANT_FIND_TRACK_SEPERATION",		0x01);
     SET_ERR_STR("SR_ERROR_DECODE_FAILURE",			0x02);
@@ -117,17 +117,17 @@ errors_init (void)
     SET_ERR_STR("SR_ERROR_SELECT_FAILED",                       0x3c);
     SET_ERR_STR("SR_ERROR_RESERVED_WINDOW_EMPTY",               0x3d);
     SET_ERR_STR("SR_ERROR_CANT_BIND_ON_INTERFACE",              0x3e);
-    SET_ERR_STR("SR_ERROR_NO_DATA_FOR_RELAY",                   0x3f);
+    SET_ERR_STR("SR_ERROR_NO_OGG_PAGES_FOR_RELAY",              0x3f);
     SET_ERR_STR("SR_ERROR_CANT_PARSE_PLS",                      0x40);
     SET_ERR_STR("SR_ERROR_CANT_PARSE_M3U",                      0x41);
     SET_ERR_STR("SR_ERROR_CANT_CREATE_SOCKET",                  0x42);
     SET_ERR_STR("SR_ERROR_CREATE_PIPE_FAILED",                  0x43);
+	/* clang-format on */
 }
 
-char*
-errors_get_string (error_code code)
-{
-    if (code > 0 || code < -NUM_ERROR_CODES)
-        return NULL;
-    return m_error_str[-code];
+char *
+errors_get_string(error_code code) {
+	if (code > 0 || code < -NUM_ERROR_CODES)
+		return NULL;
+	return m_error_str[-code];
 }

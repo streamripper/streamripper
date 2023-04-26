@@ -3,12 +3,15 @@
 
 #include "srtypes.h"
 
+typedef int error_code;
+
 ////////////////////////////////////////////////
 // StreamRipper Codes
 ////////////////////////////////////////////////
 // JCBUG -- no way to make custom error strings for http errors, also errors
 // are not organized at all, should have space to insert in places.
 //
+// clang-format off
 /* ************** IMPORTANT IF YOU ADD ERROR CODES!!!! ***********************/
 #define NUM_ERROR_CODES					((0x44)+1)
 /* ************** IMPORTANT IF YOU ADD ERROR CODES!!!! ***********************/
@@ -76,21 +79,21 @@
 #define SR_ERROR_SELECT_FAILED                  - 0x3c
 #define SR_ERROR_REQUIRED_WINDOW_EMPTY          - 0x3d  // Not an error
 #define SR_ERROR_CANT_BIND_ON_INTERFACE		- 0x3e
-#define SR_ERROR_NO_DATA_FOR_RELAY		- 0x3f
+#define SR_ERROR_NO_OGG_PAGES_FOR_RELAY		- 0x3f
 #define SR_ERROR_CANT_PARSE_PLS	                - 0x40
 #define SR_ERROR_CANT_PARSE_M3U	                - 0x41
 #define SR_ERROR_CANT_CREATE_SOCKET	        - 0x42
 #define SR_ERROR_CREATE_PIPE_FAILED	        - 0x43
 #define SR_ERROR_ABORT_PIPE_SIGNALLED           - 0x44  // Not an error
+#define SR_ERROR_BUFFER_NOT_FULL                - 0x45
+// clang-format on
 
-typedef struct ERROR_INFOst
-{
-    char error_str[MAX_ERROR_STR];
-    error_code error_code;
+typedef struct ERROR_INFOst {
+	char error_str[MAX_ERROR_STR];
+	error_code error_code;
 } ERROR_INFO;
 
-
-void errors_init (void);
-char* errors_get_string (error_code code);
+void errors_init(void);
+char *errors_get_string(error_code code);
 
 #endif

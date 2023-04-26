@@ -31,12 +31,12 @@
 #include "rip_manager.h"
 #include "ripstream.h"
 #include "ripstream_mp3.h"
+#include "ripstream_wav.h"
 #include "debug.h"
 #include "filelib.h"
 #include "relaylib.h"
 #include "socklib.h"
 #include "external.h"
-#include "ripogg.h"
 #include "track_info.h"
 #include "callback.h"
 
@@ -127,6 +127,7 @@ ripstream_mp3_rip (RIP_MANAGER_INFO* rmi)
 
     /* If first time through, check the bitrate in the stream. */
     if (rmi->ripstream_first_time_through) {
+	memcpy(rmi->getbuffer, node->data, rmi->getbuffer_size);
 	rc = ripstream_mp3_check_bitrate (rmi);
 	if (rc != SR_SUCCESS) return rc;
     }
@@ -246,6 +247,9 @@ ripstream_mp3_start_track (RIP_MANAGER_INFO* rmi, Writer *writer)
     error_code rc;
 
     debug_printf ("ripstream_mp3_start_track (starting)\n");
+
+    if (rmi->prefs->wav_output)
+        mp3_to_wav_init(&rmi->mp3_to_wav);
 
     /* Open output file */
     rc = filelib_start (rmi, writer, ti);
@@ -384,7 +388,18 @@ ripstream_mp3_write_oldest_node (RIP_MANAGER_INFO* rmi)
 		    - writer->m_next_byte.offset;
 	    }
 	    write_ptr = ((char*) node->data) + writer->m_next_byte.offset;
-	    filelib_write_track (writer, write_ptr, write_sz);
+	    if (rmi->prefs->wav_output) {
+                char* write_ptr_wav = NULL;
+                long write_sz_wav = 0;
+		/* Use MAD to decode mp3 into wav */
+		if (mp3_to_wav_run (rmi->mp3_to_wav, (unsigned char**)&write_ptr_wav, (unsigned long*)&write_sz_wav,
+                                    (const unsigned char*)write_ptr, (unsigned long)write_sz) == SR_SUCCESS)
+		    filelib_write_track (writer, write_ptr_wav, write_sz_wav);
+		if (write_ptr_wav)
+		    free(write_ptr_wav);
+            } else {
+	        filelib_write_track (writer, write_ptr, write_sz);
+            }
 
 	    /* Check if we need to end the track */
 	    if (writer->m_last_byte.node == node) {
@@ -615,6 +630,11 @@ ripstream_mp3_end_track (RIP_MANAGER_INFO* rmi,
     rc = ripstream_end_track (rmi, writer);
     if (rc != SR_SUCCESS) {
 	return rc;
+    }
+
+    if (rmi->prefs->wav_output && rmi->mp3_to_wav) {
+        mp3_to_wav_finish(rmi->mp3_to_wav);
+	rmi->mp3_to_wav = NULL;
     }
 
     return SR_SUCCESS;

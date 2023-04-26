@@ -1,0 +1,10 @@
+.cproject
+.deps/
+/Makefile
+build/
+/config.status
+/lib/Makefile
+/lib/config.h
+/lib/libstreamripper.a
+/lib/stamp-h1
+/streamripper
