@@ -1,1 +1,6 @@
-CMakeFiles
+.cproject
+.deps/
+/Makefile
+build/
+/config.status
+/lib/config.h

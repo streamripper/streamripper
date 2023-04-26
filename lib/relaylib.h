@@ -17,33 +17,37 @@
 #ifndef __RELAYLIB_H__
 #define __RELAYLIB_H__
 
-#include "srtypes.h"
+#include "compat.h"
 #include "errors.h"
-#include "sr_compat.h"
+#include "srtypes.h"
 
 /*****************************************************************************
  * Global variables
  *****************************************************************************/
-//extern RELAY_LIST* g_relay_list;
-//extern unsigned long g_relay_list_len;
-//extern HSEM g_relay_list_sem;
-
+// extern RELAY_LIST* g_relay_list;
+// extern unsigned long g_relay_list_len;
+// extern HSEM g_relay_list_sem;
 
 /*****************************************************************************
  * Function prototypes
  *****************************************************************************/
 error_code relaylib_set_response_header(char *http_header);
-error_code
-relaylib_start (RIP_MANAGER_INFO* rmi,
-		BOOL search_ports, u_short relay_port, u_short max_port, 
-		u_short *port_used, char *if_name, int max_connections, 
-		char *relay_ip, int have_metadata);
-//error_code relaylib_start(RIP_MANAGER_INFO* rmi);
-//error_code relaylib_send(char *data, int len, int accept_new, int is_meta);
-void relaylib_stop (RIP_MANAGER_INFO* rmi);
+error_code relaylib_start(
+    RIP_MANAGER_INFO *rmi,
+    BOOL search_ports,
+    u_short relay_port,
+    u_short max_port,
+    u_short *port_used,
+    char *if_name,
+    int max_connections,
+    char *relay_ip,
+    int have_metadata);
+// error_code relaylib_start(RIP_MANAGER_INFO* rmi);
+error_code relaylib_send(char *data, int len, int accept_new, int is_meta);
+void relaylib_stop(RIP_MANAGER_INFO *rmi);
 BOOL relaylib_isrunning();
 error_code relaylib_send_meta_data(char *track);
-void 
-relaylib_disconnect (RIP_MANAGER_INFO* rmi, GList *node);
+void
+relaylib_disconnect(RIP_MANAGER_INFO *rmi, RELAY_LIST *prev, RELAY_LIST *ptr);
 
 #endif //__RELAYLIB__

@@ -1,1 +1,0 @@
-"\program files\makepimp\makepimp.exe" dsp_sripper.psc

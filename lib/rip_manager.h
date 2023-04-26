@@ -17,19 +17,40 @@
 #ifndef __RIP_MANANGER_H__
 #define __RIP_MANANGER_H__
 
+#include "compat.h"
+#include "errors.h"
 #include "external.h"
 #include "prefs.h"
 #include "srtypes.h"
-#include "errors.h"
-#include "sr_compat.h"
 
-#define SRVERSION	"1.65.0-alpha"
+// clang-format off
+#define SRVERSION	"1.64.6"
 
 #if defined (WIN32)
 #define SRPLATFORM      "windows"
 #else
 #define SRPLATFORM      "unix"
 #endif
+
+// Messages for status_callback hook in rip_manager_init()
+// used for notifing to client whats going on *DO NOT* call 
+// rip_mananger_start or rip_mananger_stop from
+// these functions!!! it will cause a deadlock
+#define RM_UPDATE	0x01		// returns a pointer RIP_MANAGER_INFO struct
+#define RM_ERROR	0x02		// returns the error code
+#define RM_DONE		0x03		// NULL
+#define RM_STARTED	0x04		// NULL
+#define RM_NEW_TRACK	0x05		// Name of the new track
+#define RM_TRACK_DONE	0x06		// pull path of the track completed
+// RM_OUTPUT_DIR is now OBSOLETE
+#define RM_OUTPUT_DIR	0x07		// Full path of the output directory
+
+
+// The following are the possible status values for RIP_MANAGER_INFO
+#define RM_STATUS_BUFFERING		0x01
+#define RM_STATUS_RIPPING		0x02
+#define RM_STATUS_RECONNECTING		0x03
+
 
 // Rip manager flags options
 #define OPT_AUTO_RECONNECT	0x00000001	// reconnect automatically if dropped
@@ -67,25 +88,28 @@
 #define GET_EXTERNAL_CMD(flags)			(OPT_FLAG_ISSET(flags, OPT_EXTERNAL_CMD))
 #define GET_ADD_ID3V1(flags)			(OPT_FLAG_ISSET(flags, OPT_ADD_ID3V1))
 #define GET_ADD_ID3V2(flags)			(OPT_FLAG_ISSET(flags, OPT_ADD_ID3V2))
+// clang-format on
 
 /* Public functions */
 char *rip_manager_get_error_str(int code);
-//u_short rip_mananger_get_relay_port();	
-void set_rip_manager_options_defaults (STREAM_PREFS *m_opt);
-void rip_manager_init (void);
-error_code rip_manager_start (RIP_MANAGER_INFO **rmi, STREAM_PREFS *prefs,
-			      RIP_MANAGER_CALLBACK status_callback);
-void rip_manager_stop (RIP_MANAGER_INFO *rmi);
-void rip_manager_cleanup (void);
-error_code rip_manager_start_track (RIP_MANAGER_INFO *rmi, TRACK_INFO* ti);
-error_code rip_manager_end_track (RIP_MANAGER_INFO* rmi, TRACK_INFO* ti);
-//error_code rip_manager_put_data (RIP_MANAGER_INFO *rmi, char *buf, int size);
-//void rip_manager_post_status (RIP_MANAGER_INFO* rmi, int status);
+// u_short rip_mananger_get_relay_port();
+void set_rip_manager_options_defaults(STREAM_PREFS *m_opt);
+void rip_manager_init(void);
+error_code rip_manager_start(
+    RIP_MANAGER_INFO **rmi,
+    STREAM_PREFS *prefs,
+    RIP_MANAGER_CALLBACK status_callback);
+void rip_manager_stop(RIP_MANAGER_INFO *rmi);
+void rip_manager_cleanup(void);
+error_code rip_manager_start_track(RIP_MANAGER_INFO *rmi, TRACK_INFO *ti);
+error_code rip_manager_end_track(RIP_MANAGER_INFO *rmi, TRACK_INFO *ti);
+error_code rip_manager_put_data(RIP_MANAGER_INFO *rmi, char *buf, int size);
 
+char *client_relay_header_generate(RIP_MANAGER_INFO *rmi, int icy_meta_support);
+void client_relay_header_release(char *ch);
 
-const char*
-overwrite_opt_to_string (enum OverwriteOpt oo);
-enum OverwriteOpt string_to_overwrite_opt (char* str);
-int rip_manager_get_content_type (RIP_MANAGER_INFO* rmi);
+const char *overwrite_opt_to_string(enum OverwriteOpt oo);
+enum OverwriteOpt string_to_overwrite_opt(char *str);
+int rip_manager_get_content_type(RIP_MANAGER_INFO *rmi);
 
 #endif //__RIP_MANANGER_H__

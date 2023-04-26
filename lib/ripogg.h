@@ -14,16 +14,19 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-#ifndef __RIPOGG_H__
-#define __RIPOGG_H__
+#ifndef __RIP_OGG_H__
+#define __RIP_OGG_H__
 
 #include "list.h"
+#include "srtypes.h"
 
-void ripogg_init (RIP_MANAGER_INFO* rmi);
-void ripogg_get_current_header (RIP_MANAGER_INFO* rmi, char** ptr, int* len);
-void ripogg_process_chunk (RIP_MANAGER_INFO* rmi, 
-			   const char* chunk, 
-			   u_long size,
-			   TRACK_INFO* ti);
+void rip_ogg_init(RIP_MANAGER_INFO *rmi);
+void rip_ogg_get_current_header(RIP_MANAGER_INFO *rmi, char **ptr, int *len);
+void rip_ogg_process_chunk(
+    RIP_MANAGER_INFO *rmi,
+    LIST *page_list,
+    const char *buf,
+    u_long size,
+    TRACK_INFO *ti);
 
 #endif

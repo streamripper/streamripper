@@ -117,8 +117,14 @@
 /* Define to 1 if you have the <sys/types.h> header file. */
 #undef HAVE_SYS_TYPES_H
 
+/* Define to 1 if the system has the type `uint32_t'. */
+#undef HAVE_UINT32_T
+
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
+
+/* Define to 1 if the system has the type `u_int32_t'. */
+#undef HAVE_U_INT32_T
 
 /* Define to 1 if you have the `vprintf' function. */
 #undef HAVE_VPRINTF
@@ -153,29 +159,11 @@
 /* Define to the one symbol short name of this package. */
 #undef PACKAGE_TARNAME
 
-/* Define to the home page for this package. */
-#undef PACKAGE_URL
-
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
 
 /* Define as the return type of signal handlers (`int' or `void'). */
 #undef RETSIGTYPE
-
-/* The size of `char', as computed by sizeof. */
-#undef SIZEOF_CHAR
-
-/* The size of `int', as computed by sizeof. */
-#undef SIZEOF_INT
-
-/* The size of `long', as computed by sizeof. */
-#undef SIZEOF_LONG
-
-/* The size of `short', as computed by sizeof. */
-#undef SIZEOF_SHORT
-
-/* The size of `void*', as computed by sizeof. */
-#undef SIZEOF_VOIDP
 
 /* If using the C implementation of alloca, define if you know the
    direction of stack growth for your system; otherwise it will be
