@@ -267,6 +267,13 @@ OPTIONS
        please look at the example file fetch_external_metadata.pl, which is
        included in your distribution.
 
+       --http10
+           Connect using HTTP/1.0
+       To support streams that are not properly handled using HTTP/1.1.
+
+       --wav
+           Save output as WAV format
+
        --debug
            Save debugging log
        This creates a file called "gcs.txt" that contains all sorts of
