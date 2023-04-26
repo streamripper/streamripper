@@ -24,7 +24,7 @@
 #include "srtypes.h"
 
 // clang-format off
-#define SRVERSION	"1.64.6"
+#define SRVERSION	"1.66.0-alpha"
 
 #if defined (WIN32)
 #define SRPLATFORM      "windows"

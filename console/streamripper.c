@@ -293,6 +293,7 @@ print_usage(FILE *stream) {
 #endif
     fprintf(stream, "      -T             - Truncate duplicated tracks in incomplete\n");
     fprintf(stream, "      -E command     - Run external command to fetch metadata\n");
+    fprintf(stream, "      --http10       - Use HTTP 1.0 protocol\n");
     fprintf(stream, "      --wav          - Rip stream into WAV format\n");
     fprintf(stream, "      --quiet        - Don't print ripping status to console\n");
     fprintf(stream, "      --stderr       - Print ripping status to stderr (old behavior)\n");
@@ -516,6 +517,12 @@ parse_extended_options(STREAM_PREFS *prefs, char *rule) {
 	if (!strcmp(rule, "version")) {
 		printf("Streamripper %s\n", SRVERSION);
 		exit(0);
+	}
+
+	/* Connect using HTTP/1.0 */
+	if (!strcmp(rule,"http10")) {
+		prefs->http10 = TRUE;
+		return;
 	}
 
 	/* Use WAV format for output */

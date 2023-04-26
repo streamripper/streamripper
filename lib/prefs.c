@@ -39,7 +39,8 @@ enum PrefsVersion {
     PREFS_VERSION_1_63_BETA_2,
     PREFS_VERSION_1_63_BETA_8,
     PREFS_VERSION_1_63_4,
-    PREFS_VERSION_1_64_5
+    PREFS_VERSION_1_64_5,
+    PREFS_VERSION_1_66_0
 };
 
 static const char* prefs_version_strings[] = {
@@ -51,12 +52,13 @@ static const char* prefs_version_strings[] = {
 			    Change metadata and relay codesets from UTF-8 
 			    to iso-8859-1
 			    Change splitpoint padding from 300 to 0. */
+	"1.66.0",
     0
 };
 /* clang-format on */
 
 /* Preference file versions */
-#define PREFS_VERSION_CURRENT "1.64.5"
+#define PREFS_VERSION_CURRENT "1.66.0-alpha"
 
 /******************************************************************************
  * Private function protoypes
@@ -198,6 +200,7 @@ prefs_load(void) {
 
 		/* Fall through */
 		case PREFS_VERSION_1_64_5:
+		case PREFS_VERSION_1_66_0:
 		default:
 			/* Prefs version is up to date -- do nothing */
 			break;

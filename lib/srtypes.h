@@ -463,7 +463,8 @@ struct stream_prefs {
 	SPLITPOINT_OPTIONS sp_opt;          // options for splitpoint rules
 	CODESET_OPTIONS cs_opt;             // which codeset should i use?
 
-    int wav_output;                     // rip stream into WAV format?
+	int http10;                         // connect using HTTP/1.0
+	int wav_output;                     // rip stream into WAV format?
 };
 
 typedef struct wstreamripper_prefs WSTREAMRIPPER_PREFS;

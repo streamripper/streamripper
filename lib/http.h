@@ -7,7 +7,11 @@
 error_code
 http_parse_sc_header(const char *url, char *header, SR_HTTP_HEADER *info);
 error_code http_construct_sc_request(
-    const char *url, const char *proxyurl, char *buffer, char *useragent);
+    RIP_MANAGER_INFO *rmi,
+    const char *url,
+    const char *proxyurl,
+    char *buffer,
+    char *useragent);
 error_code
 http_construct_page_request(const char *url, BOOL proxyformat, char *buffer);
 error_code http_construct_sc_response(

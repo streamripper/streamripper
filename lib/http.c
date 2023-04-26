@@ -92,7 +92,7 @@ http_sc_connect(
 		}
 
 		debug_printf("http_sc_connect(): calling http_construct_sc_request\n");
-		ret = http_construct_sc_request(url, proxyurl, headbuf, useragent);
+		ret = http_construct_sc_request(rmi, url, proxyurl, headbuf, useragent);
 		if (ret != SR_SUCCESS) {
 			return ret;
 		}
@@ -214,7 +214,11 @@ http_parse_url(const char *url, URLINFO *urlinfo) {
 
 error_code
 http_construct_sc_request(
-    const char *url, const char *proxyurl, char *buffer, char *useragent) {
+    RIP_MANAGER_INFO *rmi,
+    const char *url,
+    const char *proxyurl,
+    char *buffer,
+    char *useragent) {
 	int ret;
 	URLINFO ui;
 	URLINFO proxyui;
@@ -230,36 +234,36 @@ http_construct_sc_request(
 		strcpy(myurl, ui.path);
 	}
 
-#if defined(commentout)
-	/* This is the old header */
-	snprintf(
-	    buffer,
-	    MAX_HEADER_LEN + MAX_HOST_LEN + SR_MAX_PATH,
-	    "GET %s HTTP/1.0\r\n"
-	    "Host: %s:%d\r\n"
-	    "User-Agent: %s\r\n"
-	    "Icy-MetaData:1\r\n",
-	    myurl,
-	    ui.host,
-	    ui.port,
-	    useragent[0] ? useragent : "Streamripper/1.x");
-#endif
-
-	/* This is the header suggested Florian Stoehr */
-	snprintf(
-	    buffer,
-	    MAX_HEADER_LEN + MAX_HOST_LEN + SR_MAX_PATH,
-	    "GET %s HTTP/1.1\r\n"
-	    "Accept: */*\r\n"
-	    "Cache-Control: no-cache\r\n"
-	    "User-Agent: %s\r\n"
-	    "Icy-Metadata: 1\r\n"
-	    "Connection: close\r\n"
-	    "Host: %s:%d\r\n",
-	    myurl,
-	    useragent[0] ? useragent : "Streamripper/1.x",
-	    ui.host,
-	    ui.port);
+	if (rmi->prefs->http10) {
+		/* This is the old header */
+		snprintf(
+		    buffer,
+		    MAX_HEADER_LEN + MAX_HOST_LEN + SR_MAX_PATH,
+		    "GET %s HTTP/1.0\r\n"
+		    "Host: %s:%d\r\n"
+		    "User-Agent: %s\r\n"
+		    "Icy-MetaData:1\r\n",
+		    myurl,
+		    ui.host,
+		    ui.port,
+		    useragent[0] ? useragent : "Streamripper/1.x");
+	} else {
+		/* This is the header suggested Florian Stoehr */
+		snprintf(
+		    buffer,
+		    MAX_HEADER_LEN + MAX_HOST_LEN + SR_MAX_PATH,
+		    "GET %s HTTP/1.1\r\n"
+		    "Accept: */*\r\n"
+		    "Cache-Control: no-cache\r\n"
+		    "User-Agent: %s\r\n"
+		    "Icy-Metadata: 1\r\n"
+		    "Connection: close\r\n"
+		    "Host: %s:%d\r\n",
+		    myurl,
+		    useragent[0] ? useragent : "Streamripper/1.x",
+		    ui.host,
+		    ui.port);
+	}
 
 	// http authentication (not proxy, see below for that)
 	if (ui.username[0] && ui.password[0]) {
